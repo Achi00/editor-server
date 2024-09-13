@@ -39,8 +39,8 @@ router.post("/", async (req, res) => {
     const dockerCommand = `docker run --rm --name ${containerName} \
       -v "${userDir}:/app" \
       -w /app \
-      --cpus 0.5 \
-      --memory 512m \
+      --cpus 0.2 \
+      --memory 256m \
       --read-only \
       --tmpfs /tmp:rw,noexec,nosuid \
       node:18-slim \
