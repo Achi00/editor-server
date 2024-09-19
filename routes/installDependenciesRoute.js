@@ -77,7 +77,7 @@ router.post("/create-package", async (req, res) => {
     version: "1.0.0",
     description: "Temporary project for package management",
     private: true, // Avoids accidental publishing to npm
-    dependencies: {},
+    dependencies: { jsdom: "^20.0.0" },
   };
   for (const pkg of packages) {
     const latestVersion = await getPackageInfo(pkg);
