@@ -4,6 +4,7 @@ const fs = require("fs").promises;
 const path = require("path");
 const { exec } = require("child_process");
 const util = require("util");
+const { parseError } = require("../helpers");
 const execPromise = util.promisify(exec);
 
 router.get("/", async (req, res) => {
@@ -146,13 +147,13 @@ router.post("/jsdom", async (req, res) => {
     // Send the result back to the client
     res.json({
       output: stdout,
-      error: stderr,
+      error: parseError(stderr),
     });
   } catch (error) {
     console.error("Error running code:", error);
     res.status(500).json({
       error: "An error occurred while running the code",
-      details: error.message,
+      details: parseError(error.message),
     });
   }
 });
