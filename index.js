@@ -1,10 +1,17 @@
 const express = require("express");
+const cors = require("cors");
 const app = express();
 const installDependenciesRoute = require("./routes/installDependenciesRoute");
 const runCodeRoute = require("./routes/runCodeRoute");
 const createFileRoute = require("./routes/createFileRoute");
 
 app.use(express.json());
+app.use(
+  cors({
+    origin: "http://localhost:3000",
+    methods: "GET,POST,PUT,DELETE",
+  })
+);
 
 app.get("/", (req, res) => {
   res.send("Hello World!");

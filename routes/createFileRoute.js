@@ -66,6 +66,7 @@ router.post("/", async (req, res) => {
 });
 
 // update content
+// insert content info file
 router.put("/", async (req, res) => {
   const { userId, fileName, fileContent } = req.body;
 
@@ -100,6 +101,17 @@ router.put("/", async (req, res) => {
     if (result.affectedRows == 0) {
       return res.status(404).json({ error: "File not found" });
     } else {
+      // insert content info file
+      // const userDir = path.join(__dirname,  "packages", userId);
+      const filePath = path.join(__dirname, "..", "packages", userId, fileName);
+      console.log(filePath);
+      fs.writeFile(filePath, fileContent, "utf8", (err) => {
+        if (err) {
+          return console.error("Error writing file:", err);
+        }
+
+        console.log("Data inserted successfully!");
+      });
       res.status(200).json({
         message: "File content saved successfully",
         fileName,
@@ -126,7 +138,7 @@ router.get("/list/:userId", async (req, res) => {
     try {
       await fs.access(userDir);
     } catch (error) {
-      return res.status(404).json({ error: "User directory not found" });
+      return res.status(404).json({ error: "User directory not found", error });
     }
 
     // Read the contents of the directory
@@ -197,7 +209,7 @@ router.get("/file-content/:userId/:fileName", async (req, res) => {
 
   try {
     // Query the database to get the file content
-    const [file] = await db.query(
+    const [file] = await pool.query(
       "SELECT file_content FROM files WHERE user_id = ? AND file_name = ?",
       [userId, fileName]
     );
@@ -205,10 +217,11 @@ router.get("/file-content/:userId/:fileName", async (req, res) => {
     if (!file) {
       return res.status(404).json({ error: "File not found" });
     }
+    console.log(file);
 
     res.status(200).json({
       fileName,
-      fileContent: file.file_content,
+      fileContent: file,
     });
   } catch (error) {
     console.error("Error retrieving file content:", error);
