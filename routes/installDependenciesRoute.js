@@ -62,6 +62,8 @@ router.post("/create-package", async (req, res) => {
     });
   }
 
+  // check if package json exists and if yes only add dependencie
+
   let userFolder = userId
     ? `packages/${userId}`
     : `packages/${generateTempFolder()}`;

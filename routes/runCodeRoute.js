@@ -4,7 +4,12 @@ const fs = require("fs").promises;
 const path = require("path");
 const { exec } = require("child_process");
 const util = require("util");
-const { parseError } = require("../helpers");
+const parseError = require("../helpers/parseError");
+const {
+  isContainerRunning,
+  startDockerContainer,
+  runUserCodeInDocker,
+} = require("../helpers/DockerRunners");
 const execPromise = util.promisify(exec);
 
 router.get("/", async (req, res) => {
@@ -92,6 +97,14 @@ router.post("/jsdom", async (req, res) => {
       return res.status(404).json({ error: "User directory not found" });
     }
 
+    // Check if the container for the user is already running
+    const containerExists = await isContainerRunning(userId);
+
+    //Start the container if it doesn't already exist
+    if (!containerExists) {
+      await startDockerContainer(userId, userDir);
+    }
+
     // Read the HTML file
     const htmlFilePath = path.join(userDir, htmlFile);
     const htmlContent = await fs.readFile(htmlFilePath, "utf8");
@@ -122,38 +135,35 @@ router.post("/jsdom", async (req, res) => {
       }
     `;
 
-    // Combine the jsdom setup with the user's JS code
-    const wrappedCode = `${jsdomHeader}\n${jsContent}`;
+    // Split the code into components to pass as JSON
+    const wrappedCode = {
+      html: htmlContent,
+      jsCode: `${jsdomHeader}\n${jsContent}`,
+      css: cssContent || "",
+    };
 
     // Write the wrapped code to a temporary file
-    const tempFilePath = path.join(userDir, "wrapped_index.js");
-    await fs.writeFile(tempFilePath, wrappedCode);
-
+    // const tempFilePath = path.join(userDir, "wrapped_index.js");
+    // await fs.writeFile(tempFilePath, wrappedCode);
+    const code = `
+  const element = { innerHTML: 'hi' };
+  element.innerHTML;
+`;
     // Execute the user's code in Docker
-    const containerName = `code-runner-${userId}-${Date.now()}`;
-    const dockerCommand = `docker run --rm --name ${containerName} \
-      -v "${userDir}:/app" \
-      -w /app \
-      node:18-slim \
-      node wrapped_index.js`;
-
-    console.log(`Executing Docker command: ${dockerCommand}`);
-
-    // Run the command
-    const { stdout, stderr } = await execPromise(dockerCommand, {
-      timeout: 10000,
-    });
+    const { stdout, stderr } = await runUserCodeInDocker(userId, wrappedCode);
 
     // Send the result back to the client
     res.json({
       output: stdout,
-      error: parseError(stderr),
+      // error: parseError(stderr),
+      error: stderr,
     });
   } catch (error) {
     console.error("Error running code:", error);
     res.status(500).json({
       error: "An error occurred while running the code",
-      details: parseError(error.message),
+      // details: parseError(error.message),
+      details: error.message,
     });
   }
 });

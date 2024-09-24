@@ -1,0 +1,15 @@
+{
+  "name": "docker-code-runner",
+  "version": "1.0.0",
+  "description": "A code execution server for running user-provided code",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.17.1",
+    "body-parser": "^1.19.0",
+    "isolated-vm": "^5.0.1",
+    "jsdom": "^25.0.1"
+  }
+}

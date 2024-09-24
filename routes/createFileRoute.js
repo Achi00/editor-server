@@ -102,7 +102,6 @@ router.put("/", async (req, res) => {
       return res.status(404).json({ error: "File not found" });
     } else {
       // insert content info file
-      // const userDir = path.join(__dirname,  "packages", userId);
       const filePath = path.join(__dirname, "..", "packages", userId, fileName);
       console.log(filePath);
       fs.writeFile(filePath, fileContent, "utf8", (err) => {
@@ -163,13 +162,17 @@ router.get("/list/:userId", async (req, res) => {
   }
 });
 
+// TODO: delete from database also
 router.delete("/", async (req, res) => {
-  const { userId, fileName } = req.body;
+  let { userId, fileName } = req.body;
 
   // Validate input
   if (!userId || !fileName) {
     return res.status(400).json({ error: "userId and fileName are required" });
   }
+
+  userId = String(userId);
+  fileName = String(fileName);
 
   try {
     // Path to user's package directory
@@ -187,6 +190,11 @@ router.delete("/", async (req, res) => {
 
     // Delete the file
     await fs.unlink(filePath);
+    // delete from db
+    await pool.query("DELETE FROM files WHERE user_id = ? AND file_name =?", [
+      userId,
+      fileName,
+    ]);
 
     // Return the updated list of files in the user's directory after deletion
     const files = await fs.readdir(userDir);
@@ -195,6 +203,7 @@ router.delete("/", async (req, res) => {
       message: "File deleted successfully",
       files: files,
     });
+    console.log("File deleted");
   } catch (error) {
     console.error("Error deleting file:", error);
     res
@@ -204,24 +213,31 @@ router.delete("/", async (req, res) => {
 });
 
 // Endpoint to retrieve file content from the database
-router.get("/file-content/:userId/:fileName", async (req, res) => {
-  const { userId, fileName } = req.params;
+router.post("/file-content/:userId", async (req, res) => {
+  const { userId } = req.params;
+  const { fileNames } = req.body;
+  console.log(fileNames);
 
   try {
+    if (!Array.isArray(fileNames) || fileNames.length === 0) {
+      return res.status(400).json({ error: "No file names provided" });
+    }
     // Query the database to get the file content
-    const [file] = await pool.query(
-      "SELECT file_content FROM files WHERE user_id = ? AND file_name = ?",
-      [userId, fileName]
+    const [files] = await pool.query(
+      "SELECT file_content FROM files WHERE user_id = ? AND file_name IN (?)",
+      [userId, fileNames]
     );
 
-    if (!file) {
-      return res.status(404).json({ error: "File not found" });
+    if (files.length === 0 || !files) {
+      return res.status(404).json({ error: "Files not found" });
     }
-    console.log(file);
+    console.log(files);
 
     res.status(200).json({
-      fileName,
-      fileContent: file,
+      files: files.map((file) => ({
+        fileName: file.file_name,
+        fileContent: file.file_content,
+      })),
     });
   } catch (error) {
     console.error("Error retrieving file content:", error);
