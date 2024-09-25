@@ -1,101 +1,69 @@
+// server.js
 const express = require("express");
-const ivm = require("isolated-vm");
 const { JSDOM } = require("jsdom");
 const bodyParser = require("body-parser");
+const path = require("path");
+const fs = require("fs");
 
 const app = express();
-app.use(bodyParser.json()); // Expecting JSON payload with HTML and JS
-
-// Route to execute jsdom code with dynamic HTML and JS
-// app.post("/run", async (req, res) => {
-//   const { html, jsCode, css } = req.body;
-
-//   // Check if the code and HTML are strings
-//   if (typeof html !== "string" || typeof jsCode !== "string") {
-//     return res
-//       .status(400)
-//       .json({ error: "Invalid format, expected HTML and JS as strings." });
-//   }
-
-//   try {
-//     // Create an isolated environment (sandbox)
-//     const isolate = new ivm.Isolate({ memoryLimit: 8 });
-//     const context = await isolate.createContext();
-
-//     // Create jsdom environment with user-provided HTML
-//     const dom = new JSDOM(html, {
-//       runScripts: "dangerously",
-//       resources: "usable",
-//     });
-//     const window = dom.window;
-
-//     // Optionally inject CSS if provided
-//     if (css) {
-//       const style = window.document.createElement("style");
-//       style.textContent = css;
-//       window.document.head.appendChild(style);
-//     }
-
-//     // Inject the dom and window objects into the isolated-vm environment
-//     await context.global.set("document", window.document, { copy: true });
-//     await context.global.set("window", window, { copy: true });
-
-//     // Ensure that jsCode is a string
-//     if (typeof jsCode !== "string") {
-//       throw new Error("jsCode must be a string.");
-//     }
-
-//     // Compile and run the user's JS code in the isolate
-//     const script = await isolate.compileScript(jsCode); // This needs to be a string
-//     await script.run(context);
-
-//     // Return the updated DOM content (for example, the updated innerHTML of a specific element)
-//     const result = window.document.getElementById("demo").innerHTML;
-
-//     res.json({
-//       output: result ? result : "Code executed successfully, no output",
-//     });
-//   } catch (err) {
-//     res.status(500).json({ error: err.toString() });
-//   }
-// });
+app.use(bodyParser.json());
 
 app.post("/run", async (req, res) => {
-  const { html, jsCode, css } = req.body;
+  const { html, jsFilePath, css } = req.body;
 
   try {
+    // Create jsdom environment
     const dom = new JSDOM(html, {
       runScripts: "dangerously",
       resources: "usable",
     });
 
-    // Optionally inject CSS
     if (css) {
       const style = dom.window.document.createElement("style");
       style.textContent = css;
       dom.window.document.head.appendChild(style);
     }
 
-    // Execute the user's JS code
-    dom.window.eval(jsCode);
+    // Resolve the user's code file path
+    const userCodePath = path.resolve("/app/user", jsFilePath);
 
-    // Extract the result (modify as needed)
+    console.log("jsFilePath: ", jsFilePath);
+    console.log("userCodePath: ", userCodePath);
+
+    // Ensure the file exists
+    if (!fs.existsSync(userCodePath)) {
+      throw new Error(`User code file not found at ${userCodePath}`);
+    }
+
+    // Change working directory to /app/user
+    process.chdir("/app/user");
+
+    // Load the user's code
+    const userCode = require(userCodePath);
+
+    console.log("user code: " + userCode);
+
+    // Check if the user code exports a function
+    if (typeof userCode !== "function") {
+      throw new Error("User code must export a function");
+    }
+
+    // Execute the user's code, passing in the jsdom environment
+    await userCode(dom.window, dom.window.document);
+
+    // Extract the result
     const result = dom.window.document.getElementById("demo").innerHTML;
 
     res.json({
       output: result || "Code executed successfully, no output",
+      error: "",
     });
   } catch (err) {
+    console.error(err);
     res.status(500).json({ error: err.toString() });
   }
 });
 
-app.post("/runtest", async (req, res) => {
-  res.json({
-    output: "Code executed successfully",
-  });
-});
-// Start the server
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Code execution server running on port ${PORT}`);

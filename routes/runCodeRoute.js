@@ -88,7 +88,10 @@ router.post("/jsdom", async (req, res) => {
 
   try {
     // Path to user's package directory
-    const userDir = path.join(__dirname, "..", "packages", userId);
+    // old
+    // const userDir = path.join(__dirname, "..", "packages", userId);
+    // new for docker file mount
+    const userDir = path.resolve(__dirname, "..", "packages", userId);
 
     // Check if the directory exists
     try {
@@ -117,40 +120,18 @@ router.post("/jsdom", async (req, res) => {
     }
 
     // Read the JavaScript file (entryFile)
-    const entryFilePath = path.join(userDir, entryFile);
-    const jsContent = await fs.readFile(entryFilePath, "utf8");
-
-    // Prepare the jsdom wrapper with HTML and optional CSS
-    const jsdomHeader = `
-      const { JSDOM } = require("jsdom");
-      const dom = new JSDOM(\`${htmlContent}\`, { runScripts: "dangerously", resources: "usable" });
-      const window = dom.window;
-      const document = window.document;
-
-      // Optionally inject CSS into the head
-      if ('${cssContent}') {
-        const style = document.createElement('style');
-        style.textContent = \`${cssContent}\`;
-        document.head.appendChild(style);
-      }
-    `;
+    // const entryFilePath = path.join(userDir, entryFile);
+    // const jsContent = await fs.readFile(entryFilePath, "utf8");
 
     // Split the code into components to pass as JSON
-    const wrappedCode = {
+    const codePayload = {
       html: htmlContent,
-      jsCode: `${jsdomHeader}\n${jsContent}`,
+      jsFilePath: entryFile,
       css: cssContent || "",
     };
 
-    // Write the wrapped code to a temporary file
-    // const tempFilePath = path.join(userDir, "wrapped_index.js");
-    // await fs.writeFile(tempFilePath, wrappedCode);
-    const code = `
-  const element = { innerHTML: 'hi' };
-  element.innerHTML;
-`;
     // Execute the user's code in Docker
-    const { stdout, stderr } = await runUserCodeInDocker(userId, wrappedCode);
+    const { stdout, stderr } = await runUserCodeInDocker(userId, codePayload);
 
     // Send the result back to the client
     res.json({

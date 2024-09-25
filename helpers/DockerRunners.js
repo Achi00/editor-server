@@ -8,11 +8,11 @@ const startDockerContainer = async (userId, userDir) => {
 
   try {
     // Check if the container is already running
-    const containerExists = await execPromise(
+    const { stdout } = await execPromise(
       `docker ps --filter "name=${containerName}" --format "{{.Names}}"`
     );
 
-    if (containerExists) {
+    if (stdout.trim() === containerName) {
       console.log(`Container ${containerName} is already running.`);
       return;
     }
@@ -20,7 +20,7 @@ const startDockerContainer = async (userId, userDir) => {
     // Start a new Docker container if not running
     console.log(`Starting container: ${containerName}`);
     await execPromise(
-      `docker run -d --name ${containerName} -p 3001:3000 -v "${userDir}:/app" -w /app code-runner-image`
+      `docker run -d --name ${containerName} -p 3001:3000 -v "${userDir}:/app/user" -w /app --cpus 0.5 --memory 512m code-runner-image`
     );
   } catch (error) {
     throw new Error(`Error creating Docker container: ${error.message}`);
@@ -28,7 +28,8 @@ const startDockerContainer = async (userId, userDir) => {
 };
 
 const runUserCodeInDocker = async (userId, code) => {
-  const containerPort = 3001; // Assuming port 3000 is exposed for this user’s container
+  // const containerPort = 3000 + parseInt(userId);
+  const containerPort = 3001;
 
   const start = Date.now();
   try {
@@ -37,7 +38,7 @@ const runUserCodeInDocker = async (userId, code) => {
     // Send the user's code and HTML as a valid JSON object
     const payload = {
       html: code.html,
-      jsCode: code.jsCode,
+      jsFilePath: code.jsFilePath,
       css: code.css,
     };
 
@@ -58,6 +59,21 @@ const runUserCodeInDocker = async (userId, code) => {
       `Code execution time (with error): ${(end - start) / 1000} seconds`
     );
 
+    // Log detailed error information
+    console.error("Error Object:", error);
+
+    if (error instanceof AggregateError) {
+      console.error("Multiple errors encountered:");
+      error.errors.forEach((err, index) => {
+        console.error(`Error ${index + 1}:`, err);
+      });
+    }
+
+    if (error.response) {
+      console.error("Error Response Status:", error.response.status);
+      console.error("Error Response Data:", error.response.data);
+    }
+
     console.error(`Error running code in Docker: ${error.message}`);
     return {
       stdout: "",
@@ -65,21 +81,6 @@ const runUserCodeInDocker = async (userId, code) => {
     };
   }
 };
-// const runUserCodeInDocker = async (userId) => {
-//   const containerName = `code-runner-${userId}`;
-//   const dockerExecCommand = `docker exec ${containerName} node /app/wrapped_index.js`;
-
-//   try {
-//     console.log(`Try ro run code in container: ${containerName}`);
-//     const { stdout, stderr } = await execPromise(dockerExecCommand);
-//     console.log("Code execution completed successfully.");
-//     return { stdout, stderr };
-//   } catch (error) {
-//     throw new Error(
-//       `Error executing code in Docker container: ${error.message}`
-//     );
-//   }
-// };
 
 const isContainerRunning = async (userId) => {
   console.log("checking if container running...");
