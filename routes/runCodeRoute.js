@@ -88,9 +88,6 @@ router.post("/jsdom", async (req, res) => {
 
   try {
     // Path to user's package directory
-    // old
-    // const userDir = path.join(__dirname, "..", "packages", userId);
-    // new for docker file mount
     const userDir = path.resolve(__dirname, "..", "packages", userId);
 
     // Check if the directory exists
@@ -112,6 +109,22 @@ router.post("/jsdom", async (req, res) => {
     const htmlFilePath = path.join(userDir, htmlFile);
     const htmlContent = await fs.readFile(htmlFilePath, "utf8");
 
+    // Read the user's JavaScript code (entryFile)
+    const entryFilePath = path.join(userDir, entryFile);
+    let userCodeContent = await fs.readFile(entryFilePath, "utf8");
+
+    // wrap user code as function
+    if (!userCodeContent.trim().startsWith("module.exports")) {
+      userCodeContent = `
+    module.exports = async function (window, document) {
+      ${userCodeContent}
+    };
+    `;
+    }
+    // Write the wrapped code to a temporary file, to then pass conteiner server
+    const wrappedCodePath = path.join(userDir, "wrappedCode.js");
+    await fs.writeFile(wrappedCodePath, userCodeContent, "utf8");
+
     // Optional: Read the CSS file if provided
     let cssContent = "";
     if (cssFile) {
@@ -126,18 +139,21 @@ router.post("/jsdom", async (req, res) => {
     // Split the code into components to pass as JSON
     const codePayload = {
       html: htmlContent,
-      jsFilePath: entryFile,
+      jsFilePath: "wrappedCode.js", // hard coded name of wrapped user code
       css: cssContent || "",
     };
 
     // Execute the user's code in Docker
-    const { stdout, stderr } = await runUserCodeInDocker(userId, codePayload);
+    const { stdout, stderr, consoleLogs } = await runUserCodeInDocker(
+      userId,
+      codePayload
+    );
 
     // Send the result back to the client
     res.json({
       output: stdout,
-      // error: parseError(stderr),
       error: stderr,
+      logs: consoleLogs,
     });
   } catch (error) {
     console.error("Error running code:", error);

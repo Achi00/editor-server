@@ -38,6 +38,9 @@ app.post("/run", async (req, res) => {
     // Change working directory to /app/user
     process.chdir("/app/user");
 
+    // clear cache to use new version of code
+    delete require.cache[require.resolve(userCodePath)];
+
     // Load the user's code
     const userCode = require(userCodePath);
 
@@ -48,8 +51,30 @@ app.post("/run", async (req, res) => {
       throw new Error("User code must export a function");
     }
 
+    // Capture console logs
+    const consoleLogs = [];
+
+    // Save original console methods
+    const originalConsole = { ...console };
+
+    // Override console methods
+    console.log = (...args) => {
+      consoleLogs.push(args.join(" "));
+      originalConsole.log(...args);
+    };
+    console.error = (...args) => {
+      consoleLogs.push(args.join(" "));
+      originalConsole.error(...args);
+    };
+
     // Execute the user's code, passing in the jsdom environment
-    await userCode(dom.window, dom.window.document);
+    try {
+      await userCode(dom.window, dom.window.document);
+    } finally {
+      // Restore original console methods
+      console.log = originalConsole.log;
+      console.error = originalConsole.error;
+    }
 
     // Extract the result
     const result = dom.window.document.getElementById("demo").innerHTML;
@@ -57,6 +82,7 @@ app.post("/run", async (req, res) => {
     res.json({
       output: result || "Code executed successfully, no output",
       error: "",
+      consoleLogs: consoleLogs,
     });
   } catch (err) {
     console.error(err);
