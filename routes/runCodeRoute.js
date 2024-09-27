@@ -97,12 +97,14 @@ router.post("/jsdom", async (req, res) => {
       return res.status(404).json({ error: "User directory not found" });
     }
 
+    const containerPort = 3001;
+
     // Check if the container for the user is already running
     const containerExists = await isContainerRunning(userId);
 
     //Start the container if it doesn't already exist
     if (!containerExists) {
-      await startDockerContainer(userId, userDir);
+      await startDockerContainer(userId, userDir, containerPort);
     }
 
     // Read the HTML file

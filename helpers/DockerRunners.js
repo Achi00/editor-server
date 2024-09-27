@@ -4,7 +4,23 @@ const execPromise = util.promisify(exec);
 const axios = require("axios");
 const path = require("path");
 
-const startDockerContainer = async (userId, userDir) => {
+// check if docker container has started to avoid getting
+const waitForServer = async (port, timeout = 10000, interval = 500) => {
+  const startTime = Date.now();
+  while (Date.now() - startTime < timeout) {
+    try {
+      await axios.get(`http://localhost:${port}/health`);
+      // Server is ready
+      return;
+    } catch (err) {
+      // Connection failed, server is not ready yet
+      await new Promise((resolve) => setTimeout(resolve, interval));
+    }
+  }
+  throw new Error(`Server did not become ready within ${timeout} ms`);
+};
+
+const startDockerContainer = async (userId, userDir, containerPort) => {
   const containerName = `code-runner-${userId}`;
 
   try {
@@ -29,6 +45,8 @@ const startDockerContainer = async (userId, userDir) => {
         // Container exists but is not running, start it
         console.log(`Starting existing container ${containerName}.`);
         await execPromise(`docker start ${containerName}`);
+        // Wait for the server to be ready
+        await waitForServer(containerPort);
         return;
       }
     } else {
@@ -37,6 +55,8 @@ const startDockerContainer = async (userId, userDir) => {
       const dockerCommand = `docker run -d --name ${containerName} -p 3001:3000 -v "${absoluteUserDir}:/app/user" -w /app --cpus 0.5 --memory 512m code-runner-image`;
       console.log(`Docker command: ${dockerCommand}`);
       await execPromise(dockerCommand);
+      // Wait for the server to be ready
+      await waitForServer(containerPort);
     }
   } catch (error) {
     throw new Error(`Error creating Docker container: ${error.message}`);

@@ -1,4 +1,3 @@
-// server.js
 const express = require("express");
 const { JSDOM } = require("jsdom");
 const bodyParser = require("body-parser");
@@ -88,6 +87,10 @@ app.post("/run", async (req, res) => {
     console.error(err);
     res.status(500).json({ error: err.toString() });
   }
+});
+
+app.get("/health", (req, res) => {
+  res.send("OK");
 });
 
 const PORT = process.env.PORT || 3000;
