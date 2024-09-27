@@ -52,7 +52,7 @@ const startDockerContainer = async (userId, userDir, containerPort) => {
     } else {
       // Container does not exist, create and start it
       console.log(`Starting new container: ${containerName}`);
-      const dockerCommand = `docker run -d --name ${containerName} -p 3001:3000 -v "${absoluteUserDir}:/app/user" -w /app --cpus 0.5 --memory 512m code-runner-image`;
+      const dockerCommand = `docker run -d --name ${containerName} -p ${containerPort}:3000 -v "${absoluteUserDir}:/app/user" -w /app --cpus 0.5 --memory 512m code-runner-image`;
       console.log(`Docker command: ${dockerCommand}`);
       await execPromise(dockerCommand);
       // Wait for the server to be ready
@@ -63,10 +63,7 @@ const startDockerContainer = async (userId, userDir, containerPort) => {
   }
 };
 
-const runUserCodeInDocker = async (userId, code) => {
-  // const containerPort = 3000 + parseInt(userId);
-  const containerPort = 3001;
-
+const runUserCodeInDocker = async (userId, code, containerPort) => {
   const start = Date.now();
   try {
     console.log(`Sending code to the running Node.js server...`);

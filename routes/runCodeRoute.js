@@ -10,6 +10,7 @@ const {
   startDockerContainer,
   runUserCodeInDocker,
 } = require("../helpers/DockerRunners");
+const isPortAvailable = require("../helpers/checkPort");
 const execPromise = util.promisify(exec);
 
 router.get("/", async (req, res) => {
@@ -86,6 +87,18 @@ router.post("/jsdom", async (req, res) => {
       .json({ error: "userId, entryFile, and htmlFile are required" });
   }
 
+  // get uneque ports to avoid conflict
+  const basePort = 3000;
+  const containerPort = basePort + parseInt(userId);
+
+  // check if port is avelable
+  const portAvailable = await isPortAvailable(containerPort);
+  if (!portAvailable) {
+    return res
+      .status(500)
+      .json({ error: `Port ${containerPort} is already in use` });
+  }
+
   try {
     // Path to user's package directory
     const userDir = path.resolve(__dirname, "..", "packages", userId);
@@ -96,8 +109,6 @@ router.post("/jsdom", async (req, res) => {
     } catch (error) {
       return res.status(404).json({ error: "User directory not found" });
     }
-
-    const containerPort = 3001;
 
     // Check if the container for the user is already running
     const containerExists = await isContainerRunning(userId);
@@ -148,7 +159,8 @@ router.post("/jsdom", async (req, res) => {
     // Execute the user's code in Docker
     const { stdout, stderr, consoleLogs } = await runUserCodeInDocker(
       userId,
-      codePayload
+      codePayload,
+      containerPort
     );
 
     // Send the result back to the client
