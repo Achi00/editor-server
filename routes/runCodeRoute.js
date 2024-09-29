@@ -79,6 +79,7 @@ router.post("/", async (req, res) => {
 
 // run jsdom
 router.post("/jsdom", async (req, res) => {
+  console.log("Request body:", req.body);
   const { userId, entryFile, htmlFile, cssFile } = req.body;
 
   if (!userId || !entryFile || !htmlFile) {
