@@ -89,6 +89,8 @@ app.post("/run", async (req, res) => {
   }
 });
 
+app.post("/node", async (req, res) => {});
+
 app.get("/health", (req, res) => {
   res.send("OK");
 });
