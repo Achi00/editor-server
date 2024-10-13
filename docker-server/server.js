@@ -7,6 +7,7 @@ const fs = require("fs");
 const app = express();
 app.use(bodyParser.json());
 
+// run jsdom code
 app.post("/run", async (req, res) => {
   const { html, jsFilePath, css } = req.body;
 
@@ -89,7 +90,71 @@ app.post("/run", async (req, res) => {
   }
 });
 
-app.post("/node", async (req, res) => {});
+// run node js code
+app.post("/run-node", async (req, res) => {
+  const { jsFilePath } = req.body;
+
+  let originalConsoleLog;
+  let originalConsoleError;
+
+  try {
+    // Resolve the user's code file path
+    const userCodePath = path.resolve("/app/user", jsFilePath);
+
+    // Ensure the file exists
+    if (!fs.existsSync(userCodePath)) {
+      throw new Error(`User code file not found at ${userCodePath}`);
+    }
+
+    // Change working directory to /app/user
+    process.chdir("/app/user");
+
+    // Clear the module from the cache
+    delete require.cache[require.resolve(userCodePath)];
+
+    // Load the user's code
+    const userCode = require(userCodePath);
+
+    // Check if the user code exports a function
+    if (typeof userCode !== "function") {
+      throw new Error("User code must export a function");
+    }
+
+    // Capture console output
+    const logs = [];
+    originalConsoleLog = console.log;
+    originalConsoleError = console.error;
+
+    console.log = function (...args) {
+      logs.push(args.join(" "));
+    };
+
+    console.error = function (...args) {
+      logs.push(args.join(" "));
+    };
+
+    // Execute the user's code
+    await userCode();
+
+    // Restore original console methods
+    console.log = originalConsoleLog;
+    console.error = originalConsoleError;
+
+    // Send response with logs
+    res.json({
+      output: logs.join("\n") || "Code executed successfully, no output",
+      logs: logs.join("\n"),
+      error: "",
+    });
+  } catch (err) {
+    // Restore original console methods in case of error
+    if (originalConsoleLog) console.log = originalConsoleLog;
+    if (originalConsoleError) console.error = originalConsoleError;
+
+    console.error(err);
+    res.status(500).json({ error: err.toString() });
+  }
+});
 
 app.get("/health", (req, res) => {
   res.send("OK");

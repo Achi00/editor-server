@@ -63,6 +63,7 @@ const startDockerContainer = async (userId, userDir, containerPort) => {
   }
 };
 
+// run user jsdom code
 const runUserCodeInDocker = async (userId, code, containerPort) => {
   const start = Date.now();
   try {
@@ -121,6 +122,35 @@ const runUserCodeInDocker = async (userId, code, containerPort) => {
   }
 };
 
+// run user's node js code
+const runUserCodeInDockerNode = async (userId, code) => {
+  const hostPort = 3000 + parseInt(userId); // Unique port per user
+
+  try {
+    // Wait for the server to be ready
+    await waitForServer(hostPort);
+
+    console.log(
+      `Sending code to the running Node.js server on port ${hostPort}...`
+    );
+
+    // Send the user's code to the server inside Docker
+    const response = await axios.post(
+      `http://localhost:${hostPort}/run-node`,
+      code,
+      { headers: { "Content-Type": "application/json" } }
+    );
+
+    return { stdout: response.data.output, stderr: response.data.error || "" };
+  } catch (error) {
+    console.error(`Error running code in Docker: ${error.message}`);
+    return {
+      stdout: "",
+      stderr: error.response ? error.response.data.error : error.message,
+    };
+  }
+};
+
 const isContainerRunning = async (userId) => {
   console.log("checking if container running...");
   const containerName = `code-runner-${userId}`;
@@ -134,4 +164,5 @@ module.exports = {
   startDockerContainer,
   runUserCodeInDocker,
   isContainerRunning,
+  runUserCodeInDockerNode,
 };

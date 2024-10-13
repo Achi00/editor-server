@@ -13,9 +13,11 @@ router.post("/", async (req, res) => {
     return res.status(400).json({ error: "userId and fileName are required" });
   }
 
+  const Id = String(userId);
+
   try {
     // Path to user's package directory
-    const userDir = path.join(__dirname, "..", "packages", userId);
+    const userDir = path.join(__dirname, "..", "packages", Id);
 
     // Create user directory if it doesn't exist
     try {
@@ -42,12 +44,12 @@ router.post("/", async (req, res) => {
     await fs.writeFile(filePath, "");
 
     // Compute the relative path (to save in the database)
-    const relativeFilePath = path.join("packages", userId, fileName);
+    const relativeFilePath = path.join("packages", Id, fileName);
 
     // Save file metadata in the database
     await pool.query(
       "INSERT INTO files (user_id, file_name, file_path) VALUES (?, ?, ?)",
-      [userId, fileName, relativeFilePath]
+      [Id, fileName, relativeFilePath]
     );
     // Return the list of files in the user's directory
     const files = await fs.readdir(userDir);
@@ -166,6 +168,7 @@ router.get("/list/:userId", async (req, res) => {
         (file.endsWith(".js") ||
           file.endsWith(".css") ||
           file.endsWith(".html")) &&
+        file != "wrappedNodeCode.js" &&
         file != "wrappedCode.js"
       );
     });

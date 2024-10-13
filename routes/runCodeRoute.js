@@ -9,6 +9,7 @@ const {
   isContainerRunning,
   startDockerContainer,
   runUserCodeInDocker,
+  runUserCodeInDockerNode,
 } = require("../helpers/DockerRunners");
 const isPortAvailable = require("../helpers/checkPort");
 const execPromise = util.promisify(exec);
@@ -17,19 +18,16 @@ router.get("/", async (req, res) => {
   res.status(200).send("hi");
 });
 
-router.post("/", async (req, res) => {
+router.post("/run-node", async (req, res) => {
   const { userId, entryFile } = req.body;
 
-  // Validate input
   if (!userId || !entryFile) {
-    return res
-      .status(400)
-      .json({ error: "userId and entryFiles are required" });
+    return res.status(400).json({ error: "userId and entryFile are required" });
   }
 
   try {
     // Path to user's package directory
-    const userDir = path.join(__dirname, "..", "packages", userId);
+    const userDir = path.resolve(__dirname, "..", "packages", userId);
 
     // Check if the directory exists
     try {
@@ -38,45 +36,50 @@ router.post("/", async (req, res) => {
       return res.status(404).json({ error: "User directory not found" });
     }
 
-    // Ensure entry file exists
+    // Start the container
+    await startDockerContainer(userId, userDir);
+
+    // Read the user's JavaScript code (entryFile)
     const entryFilePath = path.join(userDir, entryFile);
-    try {
-      await fs.access(entryFilePath);
-    } catch (error) {
-      return res.status(404).json({ error: "Entry file not found" });
+    let userCodeContent = await fs.readFile(entryFilePath, "utf8");
+
+    // Wrap the user's code if necessary
+    if (!userCodeContent.trim().startsWith("module.exports")) {
+      userCodeContent = `
+module.exports = async function () {
+${userCodeContent}
+};
+`;
     }
 
-    // Run the code in a Docker container
-    const containerName = `code-runner-${userId}-${Date.now()}`;
-    const dockerCommand = `docker run --rm --name ${containerName} \
-      -v "${userDir}:/app" \
-      -w /app \
-      --cpus 0.2 \
-      --memory 256m \
-      --read-only \
-      --tmpfs /tmp:rw,noexec,nosuid \
-      node:18-slim \
-      node ${entryFile}`;
+    // Write the wrapped code to a temporary file
+    const wrappedCodePath = path.join(userDir, "wrappedNodeCode.js");
+    await fs.writeFile(wrappedCodePath, userCodeContent, "utf8");
 
-    console.log(`Executing Docker command: ${dockerCommand}`);
+    // Prepare the payload
+    const codePayload = {
+      jsFilePath: "wrappedNodeCode.js",
+    };
 
-    const { stdout, stderr } = await execPromise(dockerCommand, {
-      timeout: 10000,
-    }); // 10 second timeout
+    // Execute the user's code in Docker
+    const { stdout, stderr } = await runUserCodeInDockerNode(
+      userId,
+      codePayload
+    );
 
-    // Clean up the temporary file
-    // await fs.unlink(tempFile);
-
+    // Send the result back to the client
     res.json({
       output: stdout,
       error: stderr,
     });
   } catch (error) {
     console.error("Error running code:", error);
-    res.status(500).json({ error: "An error occurred while running the code" });
+    res.status(500).json({
+      error: "An error occurred while running the code",
+      details: error.message,
+    });
   }
 });
-
 // run jsdom
 router.post("/jsdom", async (req, res) => {
   console.log("Request body:", req.body);
