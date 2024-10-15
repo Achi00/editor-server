@@ -4,6 +4,7 @@ const app = express();
 const installDependenciesRoute = require("./routes/installDependenciesRoute");
 const runCodeRoute = require("./routes/runCodeRoute");
 const createFileRoute = require("./routes/createFileRoute");
+const needsDOMEnvironment = require("./helpers/checkJsDOM");
 
 app.use(express.json());
 app.use(
@@ -15,6 +16,17 @@ app.use(
 
 app.get("/", (req, res) => {
   res.send("Hello World!");
+});
+
+app.post("/ifjsdom", (req, res) => {
+  try {
+    const { entryFile } = req.body;
+    console.log(entryFile);
+    const data = needsDOMEnvironment(entryFile);
+    res.json({ hasJsDom: data });
+  } catch (error) {
+    console.error("Error checking if JSDOM is needed:", error);
+  }
 });
 
 app.use("/v1/install", installDependenciesRoute);
