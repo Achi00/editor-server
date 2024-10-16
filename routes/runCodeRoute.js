@@ -82,7 +82,7 @@ ${userCodeContent}
 });
 // run jsdom
 router.post("/jsdom", async (req, res) => {
-  console.log("Request body:", req.body);
+  // console.log("Request body:", req.body);
   const { userId, entryFile, htmlFile, cssFile } = req.body;
 
   if (!userId || !entryFile || !htmlFile) {
@@ -161,17 +161,15 @@ router.post("/jsdom", async (req, res) => {
     };
 
     // Execute the user's code in Docker
-    const { stdout, stderr, consoleLogs } = await runUserCodeInDocker(
-      userId,
-      codePayload,
-      containerPort
-    );
+    const { stdout, stderr, consoleLogs, finalHTML } =
+      await runUserCodeInDocker(userId, codePayload, containerPort);
 
     // Send the result back to the client
     res.json({
       output: stdout,
       error: stderr,
       logs: consoleLogs,
+      html: finalHTML,
     });
   } catch (error) {
     console.error("Error running code:", error);

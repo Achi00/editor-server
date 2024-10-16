@@ -92,6 +92,7 @@ const runUserCodeInDocker = async (userId, code, containerPort) => {
       stdout: response.data.output,
       stderr: "",
       consoleLogs: data.consoleLogs || [],
+      finalHTML: data.finalHTML || [],
     };
   } catch (error) {
     const end = Date.now();

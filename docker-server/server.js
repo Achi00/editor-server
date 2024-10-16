@@ -79,10 +79,14 @@ app.post("/run", async (req, res) => {
     // Extract the result
     const result = dom.window.document.getElementById("demo").innerHTML;
 
+    // Serialize the final HTML after code execution
+    const finalHTML = dom.serialize();
+
     res.json({
       output: result || "Code executed successfully, no output",
       error: "",
       consoleLogs: consoleLogs,
+      finalHTML: finalHTML,
     });
   } catch (err) {
     console.error(err);
