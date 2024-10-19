@@ -193,11 +193,8 @@ router.get("/packagelist", (req, res) => {
           dependencies.push({ name: key, version: val[key] });
         }
       }
-      console.log(dependencies);
       res.status(200).json({
         userId,
-        projectRoot,
-        userFolder,
         dependencies,
       });
     } catch (parseErr) {
