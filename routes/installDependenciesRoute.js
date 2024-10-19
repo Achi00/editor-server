@@ -62,8 +62,7 @@ router.post("/create-package", async (req, res) => {
     });
   }
 
-  // check if package json exists and if yes only add dependencie
-
+  // Determine the user folder path
   let userFolder = userId
     ? `packages/${userId}`
     : `packages/${generateTempFolder()}`;
@@ -73,26 +72,44 @@ router.post("/create-package", async (req, res) => {
     fs.mkdirSync(userFolder, { recursive: true });
   }
 
-  // Create the package.json file with basic metadata
-  const packageJson = {
+  const packageJsonPath = path.join(userFolder, "package.json");
+  let packageJson = {
     name: `temp-project-${userId || generateTempFolder()}`, // Unique name
     version: "1.0.0",
     description: "Temporary project for package management",
     private: true, // Avoids accidental publishing to npm
-    dependencies: { jsdom: "^20.0.0" },
+    dependencies: {
+      jsdom: "^20.0.0",
+    },
   };
+
+  // Check if package.json already exists
+  if (fs.existsSync(packageJsonPath)) {
+    try {
+      // Read the existing package.json
+      const existingPackageJson = fs.readFileSync(packageJsonPath, "utf8");
+      packageJson = JSON.parse(existingPackageJson);
+    } catch (error) {
+      return res.status(500).json({
+        status: "error",
+        message: "Error reading existing package.json",
+        error: error.message,
+      });
+    }
+  }
+
+  // Add new packages to the dependencies
   for (const pkg of packages) {
     const latestVersion = await getPackageInfo(pkg);
     packageJson.dependencies[pkg] = `^${latestVersion}`;
   }
 
-  // Write package.json to user folder
-  const packageJsonPath = path.join(userFolder, "package.json");
+  // Write the updated package.json to the user folder
   fs.writeFileSync(packageJsonPath, JSON.stringify(packageJson, null, 2));
 
   res.status(200).json({
     status: "success",
-    message: "package.json created",
+    message: "package.json updated",
     userFolder: userFolder,
   });
 });
@@ -145,6 +162,49 @@ router.post("/install", async (req, res) => {
       error: error.message,
     });
   }
+});
+
+// get dependencies list
+router.get("/packagelist", (req, res) => {
+  const { userId } = req.body;
+  if (!userId) {
+    res.status(400).json({ Message: "userId is required" });
+    return;
+  }
+  const projectRoot = getProjectRoot();
+  let userFolder = userId
+    ? `packages/${userId}`
+    : `packages/${generateTempFolder()}`;
+  let packageJson;
+  let dependencies = [];
+
+  fs.readFile(`${userFolder}/package.json`, "utf8", (err, data) => {
+    if (err) {
+      console.error(err);
+      return res.status(500).json({ message: "Error reading package.json" });
+    }
+
+    try {
+      packageJson = JSON.parse(data); // This will convert the string to an object
+      // console.log(packageJson.dependencies);
+      const val = packageJson.dependencies;
+      for (let key in val) {
+        if (val.hasOwnProperty(key)) {
+          dependencies.push({ name: key, version: val[key] });
+        }
+      }
+      console.log(dependencies);
+      res.status(200).json({
+        userId,
+        projectRoot,
+        userFolder,
+        dependencies,
+      });
+    } catch (parseErr) {
+      console.error("Error parsing JSON:", parseErr);
+      return res.status(500).json({ message: "Error parsing package.json" });
+    }
+  });
 });
 
 module.exports = router;

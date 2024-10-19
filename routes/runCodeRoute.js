@@ -62,7 +62,7 @@ ${userCodeContent}
     };
 
     // Execute the user's code in Docker
-    const { stdout, stderr } = await runUserCodeInDockerNode(
+    const { stdout, stderr, logs } = await runUserCodeInDockerNode(
       userId,
       codePayload
     );
@@ -70,6 +70,7 @@ ${userCodeContent}
     // Send the result back to the client
     res.json({
       output: stdout,
+      logs: logs,
       error: stderr,
     });
   } catch (error) {
@@ -77,6 +78,8 @@ ${userCodeContent}
     res.status(500).json({
       error: "An error occurred while running the code",
       details: error.message,
+      // logs: error.logs || "",
+      output: "",
     });
   }
 });
@@ -133,10 +136,11 @@ router.post("/jsdom", async (req, res) => {
     // wrap user code as function
     if (!userCodeContent.trim().startsWith("module.exports")) {
       userCodeContent = `
-    module.exports = async function (window, document) {
-      ${userCodeContent}
-    };
-    `;
+        module.exports = async function (window, document) 
+        {
+          ${userCodeContent}
+        };
+      `;
     }
     // Write the wrapped code to a temporary file, to then pass conteiner server
     const wrappedCodePath = path.join(userDir, "wrappedCode.js");

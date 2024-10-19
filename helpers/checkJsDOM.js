@@ -2,7 +2,8 @@ const acorn = require("acorn");
 const estraverse = require("estraverse");
 
 function needsDOMEnvironment(code) {
-  const ast = acorn.parse(code, { ecmaVersion: "latest" });
+  const ast = acorn.parse(code, { ecmaVersion: 2022, sourceType: "module" });
+
   let usesDOM = false;
 
   estraverse.traverse(ast, {

@@ -142,7 +142,13 @@ const runUserCodeInDockerNode = async (userId, code) => {
       { headers: { "Content-Type": "application/json" } }
     );
 
-    return { stdout: response.data.output, stderr: response.data.error || "" };
+    console.log("Docker response:", response);
+
+    return {
+      stdout: response.data.output,
+      logs: response.data.logs,
+      stderr: response.data.error || "",
+    };
   } catch (error) {
     console.error(`Error running code in Docker: ${error.message}`);
     return {
