@@ -90,6 +90,7 @@ router.post("/create-package", async (req, res) => {
       const existingPackageJson = fs.readFileSync(packageJsonPath, "utf8");
       packageJson = JSON.parse(existingPackageJson);
     } catch (error) {
+      console.error(error);
       return res.status(500).json({
         status: "error",
         message: "Error reading existing package.json",
@@ -98,16 +99,23 @@ router.post("/create-package", async (req, res) => {
     }
   }
 
-  // Add new packages to the dependencies
-  for (const pkg of packages) {
-    const latestVersion = await getPackageInfo(pkg);
-    packageJson.dependencies[pkg] = `^${latestVersion}`;
+  try {
+    // Add new packages to the dependencies
+    for (const pkg of packages) {
+      const latestVersion = await getPackageInfo(pkg);
+      packageJson.dependencies[pkg] = `^${latestVersion}`;
+    }
+
+    // Write the updated package.json to the user folder
+    fs.writeFileSync(packageJsonPath, JSON.stringify(packageJson, null, 2));
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({
+      message: error.message,
+    });
   }
 
-  // Write the updated package.json to the user folder
-  fs.writeFileSync(packageJsonPath, JSON.stringify(packageJson, null, 2));
-
-  res.status(200).json({
+  return res.status(200).json({
     status: "success",
     message: "package.json updated",
     userFolder: userFolder,
@@ -165,7 +173,7 @@ router.post("/install", async (req, res) => {
 });
 
 // get dependencies list
-router.get("/packagelist", (req, res) => {
+router.post("/packagelist", (req, res) => {
   const { userId } = req.body;
   if (!userId) {
     res.status(400).json({ Message: "userId is required" });
@@ -194,7 +202,6 @@ router.get("/packagelist", (req, res) => {
         }
       }
       res.status(200).json({
-        userId,
         dependencies,
       });
     } catch (parseErr) {

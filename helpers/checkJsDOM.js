@@ -1,3 +1,4 @@
+// chacks if user code uses jsdom
 const acorn = require("acorn");
 const estraverse = require("estraverse");
 

@@ -12,6 +12,8 @@ const {
   runUserCodeInDockerNode,
 } = require("../helpers/DockerRunners");
 const isPortAvailable = require("../helpers/checkPort");
+const { preprocessUserCode, loadModule } = require("../helpers/loadModule");
+const sanitizeModuleName = require("../helpers/sanitizeModuleName");
 const execPromise = util.promisify(exec);
 
 router.get("/", async (req, res) => {
@@ -43,13 +45,28 @@ router.post("/run-node", async (req, res) => {
     const entryFilePath = path.join(userDir, entryFile);
     let userCodeContent = await fs.readFile(entryFilePath, "utf8");
 
+    // Preprocess user code to extract modules and remove import/require statements
+    const { userCodeContent: cleanCode, modulesToLoad } =
+      preprocessUserCode(userCodeContent);
+
+    // Dynamically load the extracted modules in the wrapper
+    let loadModulesCode = "";
+    for (const module of modulesToLoad) {
+      const sanitizedModuleName = sanitizeModuleName(module.variableName); // Use variableName for the variable
+      loadModulesCode += `
+        const ${sanitizedModuleName} = await loadModule('${module.moduleName}'); // Use moduleName for loading the module
+      `;
+    }
+
     // Wrap the user's code if necessary
     if (!userCodeContent.trim().startsWith("module.exports")) {
       userCodeContent = `
-module.exports = async function () {
-${userCodeContent}
-};
-`;
+        const loadModule = ${loadModule.toString()};
+        module.exports = async function () {
+        ${loadModulesCode}
+        ${cleanCode}
+        };
+      `;
     }
 
     // Write the wrapped code to a temporary file
@@ -133,12 +150,26 @@ router.post("/jsdom", async (req, res) => {
     const entryFilePath = path.join(userDir, entryFile);
     let userCodeContent = await fs.readFile(entryFilePath, "utf8");
 
+    // Preprocess user code to extract modules and remove import/require statements
+    const { userCodeContent: cleanCode, modulesToLoad } =
+      preprocessUserCode(userCodeContent);
+
+    // Dynamically load the extracted modules in the wrapper with sanitized names
+    let loadModulesCode = "";
+    for (const { variableName, moduleName } of modulesToLoad) {
+      loadModulesCode += `
+        const ${variableName} = await loadModule('${moduleName}');
+      `;
+    }
+
     // wrap user code as function
     if (!userCodeContent.trim().startsWith("module.exports")) {
       userCodeContent = `
-        module.exports = async function (window, document) 
-        {
-          ${userCodeContent}
+        const loadModule = ${loadModule.toString()};
+
+        module.exports = async function (window, document) {
+          ${loadModulesCode}
+          ${cleanCode}
         };
       `;
     }
