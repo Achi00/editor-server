@@ -26,10 +26,29 @@ router.post("/run-node", async (req, res) => {
   if (!userId || !entryFile) {
     return res.status(400).json({ error: "userId and entryFile are required" });
   }
+  // get uneque ports to avoid conflict
+  const basePort = 3000;
+  const containerPort = basePort + parseInt(userId);
+
+  // check if port is avelable
+  const portAvailable = await isPortAvailable(containerPort);
+  if (!portAvailable) {
+    return res
+      .status(500)
+      .json({ error: `Port ${containerPort} is already in use` });
+  }
 
   try {
     // Path to user's package directory
     const userDir = path.resolve(__dirname, "..", "packages", userId);
+
+    // Check if the container for the user is already running
+    const containerExists = await isContainerRunning(userId);
+
+    //Start the container if it doesn't already exist
+    if (!containerExists) {
+      await startDockerContainer(userId, userDir, containerPort);
+    }
 
     // Check if the directory exists
     try {
