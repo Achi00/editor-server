@@ -1,3 +1,4 @@
+require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
 const app = express();
@@ -5,12 +6,15 @@ const installDependenciesRoute = require("./routes/installDependenciesRoute");
 const runCodeRoute = require("./routes/runCodeRoute");
 const createFileRoute = require("./routes/createFileRoute");
 const needsDOMEnvironment = require("./helpers/checkJsDOM");
+const loginRoute = require("./routes/AuthRoute");
+const registrationRoute = require("./routes/AuthRoute");
+const tokenRoute = require("./routes/AuthRoute");
 
 app.use(express.json());
 app.use(
   cors({
-    origin: "http://localhost:3000",
-    methods: "GET,POST,PUT,DELETE",
+    origin: process.env.CLIENT_URL,
+    credentials: true,
   })
 );
 
@@ -29,9 +33,13 @@ app.post("/ifjsdom", (req, res) => {
   }
 });
 
+// for file creatin & code execution
 app.use("/v1/install", installDependenciesRoute);
 app.use("/v1/run", runCodeRoute);
 app.use("/v1/create-files", createFileRoute);
+
+// for auth
+app.use("/auth", loginRoute);
 
 // Start the server
 const PORT = process.env.PORT || 8000;

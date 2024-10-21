@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Reset Your Password</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        background-color: #000000;
+        color: #ffffff;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        margin: 0;
+      }
+      .container {
+        width: 300px;
+        text-align: center;
+      }
+      h1 {
+        font-size: 24px;
+        margin-bottom: 8px;
+      }
+      p {
+        font-size: 14px;
+        color: #a0a0a0;
+        margin-bottom: 20px;
+      }
+      input {
+        width: 100%;
+        padding: 10px;
+        margin-bottom: 10px;
+        background-color: #1a1a1a;
+        border: none;
+        border-radius: 4px;
+        color: #ffffff;
+      }
+      button {
+        width: 100%;
+        padding: 10px;
+        background-color: #2a2a2a;
+        color: #ffffff;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        margin-bottom: 10px;
+      }
+      .login-btn {
+        background-color: #c1ff72;
+        color: #000000;
+      }
+      .terms {
+        font-size: 12px;
+        color: #a0a0a0;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>Reset your password</h1>
+      <p>Enter your new password below</p>
+      <form>
+        <input type="password" placeholder="New password" required />
+        <input type="password" placeholder="Confirm new password" required />
+        <button type="submit">Reset Password</button>
+      </form>
+      <p>ALREADY HAVE AN ACCOUNT?</p>
+      <button class="login-btn">Log In</button>
+      <p class="terms">
+        By continuing, you agree to CodeRunner<br />Terms of Service, Privacy
+        Policy
+      </p>
+    </div>
+  </body>
+</html>

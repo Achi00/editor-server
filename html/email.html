@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Email Verification</title>
+    <style>
+      body,
+      html {
+        height: 100%;
+        margin: 0;
+        font-family: Arial, sans-serif;
+      }
+      .container {
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(to bottom right, #1a202c, #000000);
+      }
+      .card {
+        background-color: #2d3748;
+        padding: 2rem;
+        border-radius: 0.75rem;
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+        width: 100%;
+        max-width: 42rem;
+      }
+      .icon-container {
+        display: flex;
+        justify-content: center;
+        margin-bottom: 1.5rem;
+      }
+      .icon {
+        position: relative;
+        width: 3rem;
+        height: 3rem;
+      }
+      .icon-main {
+        width: 3rem;
+        height: 3rem;
+        background-color: white;
+        border-radius: 50%;
+      }
+      .icon-dot-1 {
+        position: absolute;
+        top: 0;
+        right: 0;
+        width: 0.75rem;
+        height: 0.75rem;
+        background-color: #3b82f6;
+        border-radius: 50%;
+      }
+      .icon-dot-2 {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 0.5rem;
+        height: 0.5rem;
+        background-color: #93c5fd;
+        border-radius: 50%;
+      }
+      h1 {
+        font-size: 1.5rem;
+        font-weight: bold;
+        text-align: center;
+        color: white;
+        margin-bottom: 1rem;
+      }
+      p {
+        color: #a0aec0;
+        text-align: center;
+        margin-bottom: 1.5rem;
+      }
+      .button-container {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        gap: 1rem;
+      }
+      .button {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 0.375rem;
+        font-size: 0.875rem;
+        font-weight: 500;
+        height: 2.5rem;
+        padding-left: 1rem;
+        padding-right: 1rem;
+        transition: all 0.2s;
+        cursor: pointer;
+        outline: none;
+        background-color: #000000;
+        color: #ffffff;
+        border: 1px solid #000;
+        font-weight: 700;
+      }
+
+      .button-primary:hover {
+        background-color: #1a1a1a;
+      }
+
+      .button-primary:focus {
+        box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.2);
+      }
+      .button-link {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        text-decoration: none;
+        color: aliceblue;
+      }
+      @media (min-width: 640px) {
+        .button-container {
+          flex-direction: row;
+        }
+        .button {
+          width: 50%;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="card">
+        <div class="icon-container">
+          <img
+            src="https://res.cloudinary.com/dle6xv667/image/upload/c_crop,w_1200,h_300/v1726253120/logo_ackzhq.png"
+            alt="Company Logo"
+            style="max-width: 350px; border-radius: 25px"
+          />
+        </div>
+        <h1>Email Verified Successfully!</h1>
+        <p>
+          Thank you for verifying your email address. Your account is now active
+          and you can start using our services.
+        </p>
+        <div class="button-container">
+          <button class="button">
+            <a href="http://localhost:3000/login" class="button-link"
+              ><img
+                src="https://res.cloudinary.com/dle6xv667/image/upload/v1726259340/dashboard_kbiemz.png"
+                alt="dashboard"
+                style="width: 25px"
+              />Continue Log in</a
+            >
+          </button>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>
