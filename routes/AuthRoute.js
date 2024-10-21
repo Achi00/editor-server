@@ -230,7 +230,7 @@ router.get("/reset-password", async (req, res) => {
     );
 
     // Send the HTML file on success
-    res.sendFile(path.join(__dirname, "../helpers/email.html"));
+    res.sendFile(path.join(__dirname, "../html/reset.html"));
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Server error" });
@@ -251,7 +251,7 @@ function verifyToken(req, res, next) {
 }
 
 async function sendPasswordResetEmail(email) {
-  const verificationLink = `http://localhost:8000/reset-password?email=${email}`;
+  const verificationLink = `http://localhost:8000/auth/reset-password?email=${email}`;
 
   await transporter.sendMail({
     from: '"Code Runner" <no-reply@example.com>', // Sender address
