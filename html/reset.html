@@ -37,6 +37,7 @@
         display: flex;
         flex-direction: column;
         justify-content: center;
+        gap: 0.5rem;
       }
       input {
         width: 400px;
@@ -53,10 +54,15 @@
         background-color: #000;
         border: 1px solid #bababa;
         color: #ffffff;
-        border-radius: 4px;
+        border-radius: 10px;
         cursor: pointer;
         font-weight: 600;
+        font-size: 18px;
         margin-bottom: 10px;
+      }
+      button:disabled {
+        background-color: #555;
+        cursor: not-allowed;
       }
       .login-btn {
         background-color: #d0fb51;
@@ -79,16 +85,36 @@
         gap: 0.8rem;
         color: black;
       }
+      .error {
+        color: red;
+        font-size: 16px;
+      }
+      .success {
+        color: greenyellow;
+        font-size: 16px;
+      }
     </style>
   </head>
   <body>
     <div class="container">
       <h1>Reset your password</h1>
       <p>Enter your new password below</p>
-      <form>
-        <input type="password" placeholder="New password" required />
-        <input type="password" placeholder="Confirm new password" required />
-        <button type="submit">Reset Password</button>
+      <form id="reset-password-form">
+        <p class="error" id="error"></p>
+        <p class="success" id="success"></p>
+        <input
+          type="password"
+          id="password"
+          placeholder="New password"
+          required
+        />
+        <input
+          type="password"
+          id="confirmPassword"
+          placeholder="Confirm new password"
+          required
+        />
+        <button type="submit" id="submitButton">Reset Password</button>
       </form>
       <p>ALREADY HAVE AN ACCOUNT?</p>
       <button class="login-btn">
@@ -133,5 +159,71 @@ l267 -268 -1329 0 c-1014 0 -1338 -3 -1370 -12 -86 -26 -166 -136 -166 -228 0
         Policy
       </p>
     </div>
+    <script>
+      document
+        .getElementById("reset-password-form")
+        .addEventListener("submit", async function (e) {
+          e.preventDefault();
+
+          // Initialize the loading state
+          const submitButton = document.getElementById("submitButton");
+          //  get password
+          const password = document.getElementById("password").value;
+          const confirmPassword =
+            document.getElementById("confirmPassword").value;
+          const email = new URLSearchParams(window.location.search).get(
+            "email"
+          );
+
+          if (!email) {
+            document.getElementById("error").innerHTML =
+              "Invalid or missing email.";
+            return;
+          }
+
+          if (password !== confirmPassword) {
+            document.getElementById("error").innerHTML =
+              "Passwords do not match.";
+            console.log("Passwords do not match.");
+            return;
+          }
+
+          try {
+            // Set loading state and disable the button
+            submitButton.disabled = true;
+            submitButton.textContent = "Loading...";
+            // Send the new password to the server
+            const response = await fetch(
+              "http://localhost:8000/auth/reset-password",
+              {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ email, password }),
+              }
+            );
+
+            if (response.ok) {
+              loading = false;
+              document.getElementById("success").innerHTML =
+                "Password reset successfully. You can now log in.";
+              // window.location.href = "http://localhost:3000/login"; // Redirect to login page
+            } else {
+              const data = await response.json();
+              document.getElementById("error").innerHTML = data.message;
+              loading = false;
+            }
+          } catch (error) {
+            console.error("Error resetting password:", error);
+            document.getElementById("error").innerHTML =
+              "An error occurred. Please try again";
+          } finally {
+            // Reset loading state and re-enable the button
+            submitButton.disabled = false;
+            submitButton.textContent = "Reset Password";
+          }
+        });
+    </script>
   </body>
 </html>

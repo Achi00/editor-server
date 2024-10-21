@@ -7,6 +7,7 @@ const fs = require("fs").promises;
 const transporter = require("../helpers/mailer");
 const path = require("path");
 const pool = require("../db");
+const verifyPassword = require("../helpers/verifyPassword");
 
 let refreshTokens = [];
 
@@ -183,8 +184,8 @@ router.post("/token", async (req, res) => {
 });
 
 // reset password
-// send email to user's mail
-router.post("/reset-pass", async (req, res) => {
+// send password verifycation email to user's mail
+router.post("/reset-pass-email", async (req, res) => {
   const { email } = req.body;
   if (!email) {
     return res.status(400).json({ message: "email is required" });
@@ -207,7 +208,7 @@ router.post("/reset-pass", async (req, res) => {
     console.error(error.message);
   }
 });
-// change password if user succesfully fills reset password form
+// send html form to user to reset password
 router.get("/reset-password", async (req, res) => {
   const { email } = req.query;
 
@@ -221,18 +222,61 @@ router.get("/reset-password", async (req, res) => {
       return res.status(400).json({ message: "Invalid user email" });
     }
 
-    const userId = rows[0].id;
-
-    // Corrected line: Set verification_token to null after verification
-    await pool.query(
-      "UPDATE users SET email_verified = ?, verification_token = ? WHERE id = ?",
-      [true, null, userId]
-    );
-
     // Send the HTML file on success
     res.sendFile(path.join(__dirname, "../html/reset.html"));
   } catch (error) {
     console.error(error);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+// make api call from html page to this route which was sent to user
+// final stage of password reset
+router.post("/reset-password", async (req, res) => {
+  const { email, password } = req.body;
+
+  console.log(email);
+  console.log(password);
+  if (!email || !password) {
+    return res.status(400).json({ message: "Email and password are required" });
+  }
+
+  try {
+    // check if new password is same as old password
+    const [rows] = await pool.query(
+      "SELECT password FROM users WHERE email = ?",
+      [email]
+    );
+
+    const oldPassword = rows[0].password;
+
+    if (rows.length >= 1) {
+      verifyPassword(password, oldPassword)
+        .then(async (result) => {
+          if (result) {
+            console.log("Password matches!");
+            return res
+              .status(400)
+              .json({ message: "You can't use your old password" });
+          } else {
+            console.log("Password does not match.");
+            // Hash the new password
+            const hashedPassword = await bcrypt.hash(password, 10);
+
+            // Update the user's password in the database
+            await pool.query("UPDATE users SET password = ? WHERE email = ?", [
+              hashedPassword,
+              email,
+            ]);
+
+            res.json({ message: "Password reset successfully" });
+            console.log("Password reset successfully");
+          }
+        })
+        .catch((err) => console.error(err));
+    }
+  } catch (error) {
+    console.error("Error resetting password:", error);
     res.status(500).json({ message: "Server error" });
   }
 });
