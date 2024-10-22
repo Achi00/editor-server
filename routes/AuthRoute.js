@@ -8,6 +8,7 @@ const transporter = require("../helpers/mailer");
 const path = require("path");
 const pool = require("../db");
 const verifyPassword = require("../helpers/verifyPassword");
+const { encryptEmail, decryptEmail } = require("../helpers/decryptEmail");
 
 let refreshTokens = [];
 
@@ -185,7 +186,7 @@ router.post("/token", async (req, res) => {
 
 // reset password
 // send password verifycation email to user's mail
-router.post("/reset-pass-email", async (req, res) => {
+router.post("/reset-email-verify", async (req, res) => {
   const { email } = req.body;
   if (!email) {
     return res.status(400).json({ message: "email is required" });
@@ -208,14 +209,19 @@ router.post("/reset-pass-email", async (req, res) => {
     console.error(error.message);
   }
 });
+// TODO: fix no match encrypt error
 // send html form to user to reset password
 router.get("/reset-password", async (req, res) => {
   const { email } = req.query;
+  if (!email) {
+    return res.status(400).send("Missing email parameter.");
+  }
+  const decryptedEmail = decryptEmail(email);
 
   try {
     // Corrected line: Use verification_token
     const [rows] = await pool.query("SELECT id FROM users WHERE email = ?", [
-      email,
+      decryptedEmail,
     ]);
 
     if (rows.length === 0) {
@@ -295,7 +301,8 @@ function verifyToken(req, res, next) {
 }
 
 async function sendPasswordResetEmail(email) {
-  const verificationLink = `http://localhost:8000/auth/reset-password?email=${email}`;
+  const encryptedEmail = encryptEmail(email);
+  const verificationLink = `http://localhost:8000/auth/reset-password?email=${encryptedEmail}`;
 
   await transporter.sendMail({
     from: '"Code Runner" <no-reply@example.com>', // Sender address
@@ -311,7 +318,7 @@ async function sendPasswordResetEmail(email) {
           <tr>
               <td style="padding: 20px;">
                   <h1 style="color: #444; font-size: 24px;">Reset your account password</h1>
-                  <p style="font-size: 16px;">To changing account password, click Reset password where you will be directed to form</p>
+                  <p style="font-size: 16px;">To change your account password, click <span style="font-weight: bold;">Reset password</span> where you will be directed to validation form</p>
                   <table width="100%" cellpadding="0" cellspacing="0" style="min-width:100%;">
                       <tr>
                           <td>

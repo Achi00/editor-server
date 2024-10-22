@@ -4,7 +4,6 @@ const fs = require("fs").promises;
 const path = require("path");
 const { exec } = require("child_process");
 const util = require("util");
-const parseError = require("../helpers/parseError");
 const {
   isContainerRunning,
   startDockerContainer,
@@ -229,7 +228,6 @@ router.post("/jsdom", async (req, res) => {
     console.error("Error running code:", error);
     res.status(500).json({
       error: "An error occurred while running the code",
-      // details: parseError(error.message),
       details: error.message,
     });
   }
