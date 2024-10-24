@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Email Verified Successfully</title>
+    <title>Expired or Invalid Token</title>
     <link
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
@@ -21,6 +21,12 @@
         align-items: center;
         height: 100vh;
         line-height: 1.6;
+      }
+
+      nav {
+        position: absolute;
+        top: 10px;
+        left: 25px;
       }
 
       .container {
@@ -47,14 +53,20 @@
         color: #a0a0a0;
       }
 
+      .home-button {
+        background-color: transparent;
+        border: none;
+        cursor: pointer;
+      }
+
       .button {
         display: inline-block;
         background-color: #d0fb51;
         color: black;
-        border: none;
         cursor: pointer;
         padding: 0.75rem 1.5rem;
         border-radius: 5px;
+        border: none;
         text-decoration: none;
         font-weight: bold;
         transition: background-color 0.3s ease;
@@ -80,16 +92,20 @@
     </style>
   </head>
   <body>
-    <div class="container">
-      <i class="fas fa-check-circle icon" aria-hidden="true"></i>
-      <h1>Email Verified Successfully</h1>
-      <p>
-        Great news! Your email address has been successfully verified. You can
-        now enjoy full access to your account and all its features.
-      </p>
-      <button onclick="navigateToLoginPage()" class="button">
-        Go to Dashboard
+    <nav>
+      <button class="home-button" onclick="navigateToLoginPage()">
+        <img width="125px" src="../assets/logo.png" alt="logo" />
       </button>
+    </nav>
+    <div class="container">
+      <i class="fas fa-exclamation-circle icon" aria-hidden="true"></i>
+      <h1>Expired or Invalid Token</h1>
+      <p>
+        We're sorry, but the validation token you're trying to use has either
+        expired or is invalid. This could be due to the token timing out or
+        being used already.
+      </p>
+      <button onclick="navigateToLoginPage()" class="button">Go Back</button>
     </div>
   </body>
   <script>

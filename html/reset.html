@@ -74,6 +74,11 @@
         justify-content: center;
         gap: 0.8rem;
       }
+      .login-wrapper {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
       .terms {
         font-size: 12px;
         color: #a0a0a0;
@@ -117,8 +122,8 @@
         <button type="submit" id="submitButton">Reset Password</button>
       </form>
       <p>ALREADY HAVE AN ACCOUNT?</p>
-      <button class="login-btn">
-        <a href="http://localhost:3000/login">
+      <button class="login-btn" onclick="redirectTologin()">
+        <div class="login-wrapper">
           <svg
             version="1.0"
             xmlns="http://www.w3.org/2000/svg"
@@ -152,7 +157,7 @@ l267 -268 -1329 0 c-1014 0 -1338 -3 -1370 -12 -86 -26 -166 -136 -166 -228 0
             </g>
           </svg>
           Log In
-        </a>
+        </div>
       </button>
       <p class="terms">
         By continuing, you agree to CodeRunner<br />Terms of Service, Privacy
@@ -190,7 +195,6 @@ l267 -268 -1329 0 c-1014 0 -1338 -3 -1370 -12 -86 -26 -166 -136 -166 -228 0
 
           try {
             // Set loading state and disable the button
-            submitButton.disabled = true;
             submitButton.textContent = "Loading...";
             // Send the new password to the server
             const response = await fetch(
@@ -205,6 +209,8 @@ l267 -268 -1329 0 c-1014 0 -1338 -3 -1370 -12 -86 -26 -166 -136 -166 -228 0
             );
 
             if (response.ok) {
+              document.getElementById("submitButton").disabled = true;
+              document.getElementById("error").innerHTML = "";
               loading = false;
               document.getElementById("success").innerHTML =
                 "Password reset successfully. You can now log in.";
@@ -224,6 +230,10 @@ l267 -268 -1329 0 c-1014 0 -1338 -3 -1370 -12 -86 -26 -166 -136 -166 -228 0
             submitButton.textContent = "Reset Password";
           }
         });
+
+      function redirectTologin() {
+        window.location.replace("http://localhost:3000/login");
+      }
     </script>
   </body>
 </html>

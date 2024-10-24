@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Email Decryption Error</title>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Lato:ital,wght@0,100;0,300;0,400;0,700;0,900;1,100;1,300;1,400;1,700;1,900&family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      body {
+        margin: 0;
+        padding: 0;
+        font-family: "Roboto", sans-serif;
+        background-color: black;
+        color: #fff;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+      }
+
+      .container {
+        text-align: center;
+        padding: 2rem;
+        border: 2px solid #d0fb51;
+        border-radius: 10px;
+        max-width: 400px;
+        width: 90%;
+      }
+
+      h1 {
+        font-size: 2rem;
+        margin-bottom: 1rem;
+      }
+
+      p {
+        font-size: 1rem;
+        margin-bottom: 2rem;
+      }
+
+      .icon {
+        font-size: 4rem;
+        margin-bottom: 1rem;
+      }
+
+      .error-code {
+        background-color: #1a1a1a;
+        padding: 0.5rem 1rem;
+        letter-spacing: 0.7px;
+        font-weight: 600;
+        border: 1px solid white;
+        border-radius: 5px;
+        font-size: 1rem;
+      }
+
+      button {
+        display: inline-block;
+        background-color: #d0fb51;
+        color: black;
+        font-weight: bold;
+        padding: 0.75rem 1.5rem;
+        border-radius: 5px;
+        font-size: 1.2rem;
+        text-decoration: none;
+        font-family: "Roboto", sans-serif;
+        transition: background-color 0.3s ease;
+        cursor: pointer;
+      }
+
+      button:hover {
+        background-color: #86a533;
+      }
+      #error-message {
+        word-break: break-all;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <i class="fas fa-lock icon"></i>
+      <h1>Email Decryption Failed</h1>
+      <p>
+        We encountered an error while trying to decrypt your email. This could
+        be due to an invalid key or corrupted data.
+      </p>
+      <div class="error-code">
+        Error: <span id="error-message">DEC_FAIL_001</span>
+      </div>
+      <p>Please try again or contact support if the issue persists.</p>
+      <button onclick="navigateToResetPage()">Go Back</button>
+    </div>
+  </body>
+  <script>
+    const email = new URLSearchParams(window.location.search).get("email");
+    const message = (document.getElementById(
+      "error-message"
+    ).innerHTML = `This type of query is not allowed\n ${email}`);
+    function navigateToResetPage() {
+      window.location.replace("http://localhost:3000/reset");
+      console.log(email); // Output: 123@example.com
+    }
+  </script>
+</html>

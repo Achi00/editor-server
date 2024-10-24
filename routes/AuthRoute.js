@@ -62,9 +62,7 @@ router.get("/verify-email", async (req, res) => {
     );
 
     if (rows.length === 0) {
-      return res
-        .status(400)
-        .json({ message: "Invalid or expired verification token" });
+      return res.sendFile(path.join(__dirname, "../html/expiredToken.html"));
     }
 
     const userId = rows[0].id;
@@ -76,7 +74,7 @@ router.get("/verify-email", async (req, res) => {
     );
 
     // Send the HTML file on success
-    res.sendFile(path.join(__dirname, "../helpers/email.html"));
+    return res.sendFile(path.join(__dirname, "../html/email.html"));
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Server error" });
@@ -213,10 +211,18 @@ router.post("/reset-email-verify", async (req, res) => {
 // send html form to user to reset password
 router.get("/reset-password", async (req, res) => {
   const { email } = req.query;
-  if (!email) {
+  let decryptedEmail;
+  try {
+    decryptedEmail = decryptEmail(email);
+  } catch (error) {
+    console.error("there was problem decrypting email");
+    return res.sendFile(path.join(__dirname, "../html/decryptError.html"));
+  }
+  if (!decryptedEmail) {
     return res.status(400).send("Missing email parameter.");
   }
-  const decryptedEmail = decryptEmail(email);
+
+  console.log("decryptedEmail: " + decryptedEmail);
 
   try {
     // Corrected line: Use verification_token
@@ -241,9 +247,17 @@ router.get("/reset-password", async (req, res) => {
 router.post("/reset-password", async (req, res) => {
   const { email, password } = req.body;
 
-  console.log(email);
-  console.log(password);
-  if (!email || !password) {
+  let decryptedEmail;
+  try {
+    decryptedEmail = decryptEmail(email);
+  } catch (error) {
+    console.error("there was problem decrypting email");
+    return res.sendFile(path.join(__dirname, "../html/decryptError.html"));
+  }
+
+  console.log("email " + decryptedEmail);
+  console.log("password " + password);
+  if (!decryptedEmail || !password) {
     return res.status(400).json({ message: "Email and password are required" });
   }
 
@@ -251,11 +265,12 @@ router.post("/reset-password", async (req, res) => {
     // check if new password is same as old password
     const [rows] = await pool.query(
       "SELECT password FROM users WHERE email = ?",
-      [email]
+      [decryptedEmail]
     );
 
-    const oldPassword = rows[0].password;
-
+    const oldPassword = rows[0]?.password;
+    // console.log("sql data: " + rows.length);
+    // console.log("sql data: " + rows[0].password);
     if (rows.length >= 1) {
       verifyPassword(password, oldPassword)
         .then(async (result) => {
@@ -272,7 +287,7 @@ router.post("/reset-password", async (req, res) => {
             // Update the user's password in the database
             await pool.query("UPDATE users SET password = ? WHERE email = ?", [
               hashedPassword,
-              email,
+              decryptedEmail,
             ]);
 
             res.json({ message: "Password reset successfully" });
@@ -348,7 +363,7 @@ async function sendPasswordResetEmail(email) {
   });
 }
 async function sendVerificationEmail(email, token) {
-  const verificationLink = `http://localhost:8000/verify-email?token=${token}`;
+  const verificationLink = `http://localhost:8000/auth/verify-email?token=${token}`;
 
   await transporter.sendMail({
     from: '"Code Runner" <no-reply@example.com>', // Sender address
@@ -371,7 +386,7 @@ async function sendVerificationEmail(email, token) {
                               <div style="text-align: center; margin: 30px 0;">
                                   
                          
-             <a href="${verificationLink}" style="background-color: #007bff; color: #ffffff; padding: 12px 30px; text-decoration: none; border-radius: 5px; font-weight: bold; display: inline-block; font-size: 16px;">Verify Email</a>
+             <a href="${verificationLink}" style="background-color: #D0FB51; color: #000; padding: 12px 30px; text-decoration: none; border-radius: 5px; font-weight: bold; display: inline-block; font-size: 16px;">Verify Email</a>
                               </div>
                           </td>
                       </tr>

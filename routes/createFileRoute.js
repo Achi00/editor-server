@@ -71,6 +71,8 @@ router.post("/", async (req, res) => {
 router.put("/", async (req, res) => {
   const { userId, files } = req.body;
 
+  console.log(userId, files);
+
   // Validate input
   // files array should contain fileName and fileContent
   if (!userId || !files || !Array.isArray(files) || files.length === 0) {
