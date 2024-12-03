@@ -70,7 +70,7 @@ router.post("/run-node", async (req, res) => {
     // Dynamically load the extracted modules in the wrapper
     let loadModulesCode = "";
     for (const module of modulesToLoad) {
-      const sanitizedModuleName = sanitizeModuleName(module.variableName); // Use variableName for the variable
+      const sanitizedModuleName = sanitizeModuleName(module.variableName);
       loadModulesCode += `
         const ${sanitizedModuleName} = await loadModule('${module.moduleName}'); // Use moduleName for loading the module
       `;

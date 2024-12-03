@@ -71,8 +71,6 @@ router.post("/", async (req, res) => {
 router.put("/", async (req, res) => {
   const { userId, files } = req.body;
 
-  console.log(userId, files);
-
   // Validate input
   // files array should contain fileName and fileContent
   if (!userId || !files || !Array.isArray(files) || files.length === 0) {
@@ -122,7 +120,6 @@ router.put("/", async (req, res) => {
 
       // Update the actual file in the file system to execute code from there
       const filePath = path.join(__dirname, "..", "packages", userId, fileName);
-      console.log(`Updating file at: ${filePath}`);
 
       try {
         await fs.writeFile(filePath, fileContent, "utf8");

@@ -94,7 +94,7 @@
   </body>
   <script>
     function navigateToLoginPage() {
-      window.location.replace("http://localhost:3000/login");
+      window.location.replace(`${process.env.CLIENT_URL}/login`);
     }
   </script>
 </html>

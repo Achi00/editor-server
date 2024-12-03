@@ -15,7 +15,6 @@ const getProjectRoot = () => {
 const runInDocker = (command, workDir) => {
   return new Promise((resolve, reject) => {
     const dockerCommand = `docker run --rm -v "${workDir}:/app" nodejs-sandbox ${command}`;
-    console.log(`Executing Docker command: ${dockerCommand}`);
     const childProcess = exec(
       dockerCommand,
       { timeout: 120000 },
@@ -194,7 +193,6 @@ router.post("/packagelist", (req, res) => {
 
     try {
       packageJson = JSON.parse(data); // This will convert the string to an object
-      // console.log(packageJson.dependencies);
       const val = packageJson.dependencies;
       for (let key in val) {
         if (val.hasOwnProperty(key)) {

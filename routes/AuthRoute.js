@@ -222,8 +222,6 @@ router.get("/reset-password", async (req, res) => {
     return res.status(400).send("Missing email parameter.");
   }
 
-  console.log("decryptedEmail: " + decryptedEmail);
-
   try {
     // Corrected line: Use verification_token
     const [rows] = await pool.query("SELECT id FROM users WHERE email = ?", [
@@ -255,8 +253,6 @@ router.post("/reset-password", async (req, res) => {
     return res.sendFile(path.join(__dirname, "../html/decryptError.html"));
   }
 
-  console.log("email " + decryptedEmail);
-  console.log("password " + password);
   if (!decryptedEmail || !password) {
     return res.status(400).json({ message: "Email and password are required" });
   }
@@ -269,8 +265,6 @@ router.post("/reset-password", async (req, res) => {
     );
 
     const oldPassword = rows[0]?.password;
-    // console.log("sql data: " + rows.length);
-    // console.log("sql data: " + rows[0].password);
     if (rows.length >= 1) {
       verifyPassword(password, oldPassword)
         .then(async (result) => {

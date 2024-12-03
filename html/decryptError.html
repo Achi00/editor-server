@@ -104,8 +104,7 @@
       "error-message"
     ).innerHTML = `This type of query is not allowed\n ${email}`);
     function navigateToResetPage() {
-      window.location.replace("http://localhost:3000/reset");
-      console.log(email); // Output: 123@example.com
+      window.location.replace(`${process.env.CLIENT_URL}/reset`);
     }
   </script>
 </html>

@@ -27,9 +27,6 @@ app.post("/run", async (req, res) => {
     // Resolve the user's code file path
     const userCodePath = path.resolve("/app/user", jsFilePath);
 
-    console.log("jsFilePath: ", jsFilePath);
-    console.log("userCodePath: ", userCodePath);
-
     // Ensure the file exists
     if (!fs.existsSync(userCodePath)) {
       throw new Error(`User code file not found at ${userCodePath}`);

@@ -25,7 +25,6 @@ app.get("/", (req, res) => {
 app.post("/ifjsdom", (req, res) => {
   try {
     const { entryFile } = req.body;
-    console.log(entryFile);
     const data = needsDOMEnvironment(entryFile);
     res.json({ hasJsDom: data });
   } catch (error) {
