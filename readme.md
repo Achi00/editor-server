@@ -51,7 +51,7 @@ The system determines whether to use Node.js runtime or jsdom based on the requi
 - If the code requires browser-like APIs, jsdom is used to simulate a browser environment.
 - For server-side or general JavaScript execution, the Node.js runtime is used.
 
-This decision is typically made based on the presence of browser-specific APIs in the user's code or explicit configuration. one will not work as anothat, its same for both cases because when server recives user's code it is wrapper in some additional logic and it is stored in new .js file, for more info about this, can see:
+This decision is typically made based on the presence of browser-specific APIs in the user's code or explicit configuration. one will not work with another endpoint, its same for both cases because when server recives user's code it is wrapper in some additional logic and it is stored in new .js file, for more info about this, can see:
 `./routes/runCodeRoute.js, From line 66`
 
 ## Tech Stack
@@ -80,21 +80,21 @@ This decision is typically made based on the presence of browser-specific APIs i
 
    - Retrieves the list of installed packages for a user, from user directory in `package.json`
 
-   4. **POST /auth/register**
+4. **POST /auth/register**
 
    - Registers a new user with email validation
 
-4. **POST /auth/login**
+5. **POST /auth/login**
 
    - Authenticates a user and returns a JWT token
 
-5. **POST /auth/verify-email**
+6. **POST /auth/verify-email**
 
    - Email verification
 
-6. **POST /auth/token**
+7. **POST /auth/token**
    - Manage auth token
-7. **POST /auth/reset-email-verify**
+8. **POST /auth/reset-email-verify**
    - Reset password by url which is send to user's email
 
 ## Setup and Running
@@ -103,3 +103,4 @@ This decision is typically made based on the presence of browser-specific APIs i
 2. Build the `nodejs-sandbox` Docker image (Dockerfile should be provided separately).
 3. Install Node.js dependencies for the API server:
    `npm install`
+4. Run MySQL server
