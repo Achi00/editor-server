@@ -35,7 +35,7 @@ This API provides functionality for managing Node.js packages and executing code
 
 The API uses Docker to create a sandboxed environment for package installation and code execution. This ensures security and isolation between different user sessions, because it creates different container for each user, container is defined as `container-name-UserID`
 
-- A custom Docker image `nodejs-sandbox` is Node js server which has two endpoints, one is to run pune Node js code and other to run js-dom code.
+- A custom Docker image `nodejs-sandbox` is Node js server which has two endpoints, one is to run only Node js code and other to run js-dom code.
 - It first checks if user has running container and if there is container for that user it re uses existing one to cut down run time delay
 - The `./helpers/DockerRunners.js` include function which executes commands within Docker container.
 - User directories are mounted as volumes in the Docker container to persist data.
