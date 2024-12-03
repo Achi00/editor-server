@@ -148,7 +148,7 @@ router.post("/logout", async (req, res) => {
 });
 
 router.post("/token", async (req, res) => {
-  const { userId } = req.body; // Or use email
+  const { userId } = req.body;
 
   try {
     // Fetch the user and their refresh token from the database

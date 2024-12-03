@@ -76,7 +76,7 @@ router.post("/create-package", async (req, res) => {
     name: `temp-project-${userId || generateTempFolder()}`, // Unique name
     version: "1.0.0",
     description: "Temporary project for package management",
-    private: true, // Avoids accidental publishing to npm
+    private: true,
     dependencies: {
       jsdom: "^20.0.0",
     },
@@ -171,7 +171,7 @@ router.post("/install", async (req, res) => {
   }
 });
 
-// get dependencies list
+// get dependencies list from directory
 router.post("/packagelist", (req, res) => {
   const { userId } = req.body;
   if (!userId) {
@@ -192,7 +192,7 @@ router.post("/packagelist", (req, res) => {
     }
 
     try {
-      packageJson = JSON.parse(data); // This will convert the string to an object
+      packageJson = JSON.parse(data);
       const val = packageJson.dependencies;
       for (let key in val) {
         if (val.hasOwnProperty(key)) {

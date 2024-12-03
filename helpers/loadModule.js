@@ -20,7 +20,7 @@ async function loadModule(moduleName) {
 }
 
 // Function to preprocess user code: remove import/require and capture module names
-// avoids errors if npm packege needs require or import
+// avoiding errors if npm packege needs require or import
 function preprocessUserCode(userCodeContent) {
   const importPattern = /import\s+(\w+)\s+from\s+['"](.*)['"];?/g;
   const requirePattern = /const\s+(\w+)\s*=\s*require\(['"](.*)['"]\);?/g;

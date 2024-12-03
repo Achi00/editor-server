@@ -1,23 +1,31 @@
 # Package Management and Code Execution API
 
-This API provides functionality for managing Node.js packages and executing code in a sandboxed environment using Docker. It's saves files and installed npm repositories on filesystem and is able to acces them in code, because of docker all code running environment is secured and independent because for each user it creates new container for user
+This API provides functionality for managing Node.js packages and executing code in a sandboxed environment using Docker. It's saves files and installed npm repositories on file system and is able to access them if needed, because of docker all code running environment is secured and independent because for each user it creates new container for user, to run app you have to have .js file, where you can runn app by `Run` button
+
+![App](./app.jpg)
 
 ## Functionality
 
-1. **Package Management**
+1. **User Authentication and Management**
+
+   - **JWT Authentication**: Secure endpoints using JSON Web Tokens for user authentication.
+   - **Email Validation**: User have to validate there email addresses during registration otherwise they can't be authenticated or authorized.
+   - **Password Reset/Recovery**: Allow users to reset or recover their passwords via email.
+
+2. **Package Management**
 
    - Create and update `package.json` files for users
    - Install dependencies using npm
    - Retrieve a list of installed packages
 
-2. **Code Execution**
+3. **Code Execution**
 
    - Run JavaScript code in a sandboxed Docker environment
    - Support for both Node.js runtime and jsdom for browser-like environments
 
    - It determines if code needs jsdom support or not and chooses endpoint to run JavaScript code based on .js file it receives
 
-3. **Code Preview**
+4. **Code Preview**
    - Because it has jsdom support it can display html dom and can be styled with css
    - Displays logs, errors and messages from dom
 
@@ -54,6 +62,7 @@ This decision is typically made based on the presence of browser-specific APIs i
 - **Browser Simulation**: jsdom
 - **HTTP Client**: Axios (for npm registry queries)
 - **Database**: mysql
+- **Authentication**: JWT
 
 ## API Endpoints
 
@@ -68,7 +77,25 @@ This decision is typically made based on the presence of browser-specific APIs i
    - Executes `npm install` in a Docker container
 
 3. **POST /packagelist**
+
    - Retrieves the list of installed packages for a user, from user directory in `package.json`
+
+   4. **POST /auth/register**
+
+   - Registers a new user with email validation
+
+4. **POST /auth/login**
+
+   - Authenticates a user and returns a JWT token
+
+5. **POST /auth/verify-email**
+
+   - Email verification
+
+6. **POST /auth/token**
+   - Manage auth token
+7. **POST /auth/reset-email-verify**
+   - Reset password by url which is send to user's email
 
 ## Setup and Running
 

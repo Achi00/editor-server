@@ -63,7 +63,7 @@ router.post("/run-node", async (req, res) => {
     const entryFilePath = path.join(userDir, entryFile);
     let userCodeContent = await fs.readFile(entryFilePath, "utf8");
 
-    // Preprocess user code to extract modules and remove import/require statements
+    // Preprocess user code to extract modules and remove import/require statements to avoid errors
     const { userCodeContent: cleanCode, modulesToLoad } =
       preprocessUserCode(userCodeContent);
 
@@ -72,7 +72,7 @@ router.post("/run-node", async (req, res) => {
     for (const module of modulesToLoad) {
       const sanitizedModuleName = sanitizeModuleName(module.variableName);
       loadModulesCode += `
-        const ${sanitizedModuleName} = await loadModule('${module.moduleName}'); // Use moduleName for loading the module
+        const ${sanitizedModuleName} = await loadModule('${module.moduleName}');
       `;
     }
 
@@ -133,7 +133,7 @@ router.post("/jsdom", async (req, res) => {
   const basePort = 3000;
   const containerPort = basePort + parseInt(userId);
 
-  // check if port is avelable
+  // check if port is available
   const portAvailable = await isPortAvailable(containerPort);
   if (!portAvailable) {
     return res
@@ -209,7 +209,7 @@ router.post("/jsdom", async (req, res) => {
     // Split the code into components to pass as JSON
     const codePayload = {
       html: htmlContent,
-      jsFilePath: "wrappedCode.js", // hard coded name of wrapped user code
+      jsFilePath: "wrappedCode.js", // hard coded name of wrapped user code becaus eit can be only one
       css: cssContent || "",
     };
 
