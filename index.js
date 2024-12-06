@@ -6,9 +6,9 @@ const installDependenciesRoute = require("./routes/installDependenciesRoute");
 const runCodeRoute = require("./routes/runCodeRoute");
 const createFileRoute = require("./routes/createFileRoute");
 const needsDOMEnvironment = require("./helpers/checkJsDOM");
-const loginRoute = require("./routes/AuthRoute");
-const registrationRoute = require("./routes/AuthRoute");
-const tokenRoute = require("./routes/AuthRoute");
+const loginRoutes = require("./routes/AuthRoute");
+// const registrationRoute = require("./routes/AuthRoute");
+// const tokenRoute = require("./routes/AuthRoute");
 
 app.use(express.json());
 app.use(
@@ -38,7 +38,7 @@ app.use("/v1/run", runCodeRoute);
 app.use("/v1/create-files", createFileRoute);
 
 // for auth
-app.use("/auth", loginRoute);
+app.use("/auth", loginRoutes);
 
 // Start the server
 const PORT = process.env.PORT || 8000;

@@ -10,7 +10,9 @@ const pool = require("../db");
 const verifyPassword = require("../helpers/verifyPassword");
 const { encryptEmail, decryptEmail } = require("../helpers/decryptEmail");
 
-let refreshTokens = [];
+function generateResetToken() {
+  return crypto.randomBytes(32).toString("hex");
+}
 
 router.post("/register", async (req, res) => {
   const { name, email, password } = req.body;
@@ -243,7 +245,11 @@ router.get("/reset-password", async (req, res) => {
 // make api call from html page to this route which was sent to user
 // final stage of password reset
 router.post("/reset-password", async (req, res) => {
-  const { email, password } = req.body;
+  const { email, password, token } = req.body;
+
+  if (!token) {
+    return res.status(401).json({ message: "Can't validate token" });
+  }
 
   let decryptedEmail;
   try {
@@ -284,6 +290,11 @@ router.post("/reset-password", async (req, res) => {
               decryptedEmail,
             ]);
 
+            await pool.query(
+              "UPDATE password_resets SET used = TRUE WHERE token = ?",
+              [token]
+            );
+
             res.json({ message: "Password reset successfully" });
             console.log("Password reset successfully");
           }
@@ -293,6 +304,40 @@ router.post("/reset-password", async (req, res) => {
   } catch (error) {
     console.error("Error resetting password:", error);
     res.status(500).json({ message: "Server error" });
+  }
+});
+
+// validate token expiration data, this makes sure that password reset url will only be used once
+router.post("/validate-reset", async (req, res) => {
+  const { email, token } = req.body;
+
+  if (!email || !token) {
+    return res.status(400).json({ message: "Invalid request" });
+  }
+
+  console.log("Received Email:", email);
+  console.log("Received Token:", token);
+
+  try {
+    // Decrypt the email
+    const decryptedEmail = decryptEmail(email);
+
+    // Validate the token and email
+    const [rows] = await pool.query(
+      "SELECT * FROM password_resets WHERE email = ? AND token = ? AND used = FALSE AND expires_at > NOW()",
+      [decryptedEmail, token]
+    );
+
+    if (rows.length === 0) {
+      console.log("expired token");
+      return res.status(400).json({ message: "Invalid or expired token" });
+    }
+
+    console.log("Token is valid");
+    return res.json({ message: "Token is valid" });
+  } catch (error) {
+    console.error("Error validating token:", error);
+    return res.status(500).json({ message: "Server error" });
   }
 });
 
@@ -311,7 +356,15 @@ function verifyToken(req, res, next) {
 
 async function sendPasswordResetEmail(email) {
   const encryptedEmail = encryptEmail(email);
-  const verificationLink = `http://localhost:8000/auth/reset-password?email=${encryptedEmail}`;
+  const resetToken = generateResetToken();
+  const verificationLink = `http://localhost:8000/auth/reset-password?email=${encryptedEmail}&token=${resetToken}`;
+
+  // save token in database to watch its expiration time
+  const expiresAt = new Date(Date.now() + 3600000); // Token valid for 1 hour
+  await pool.query(
+    "INSERT INTO password_resets (email, token, expires_at, used) VALUES (?, ?, ?, ?)",
+    [email, resetToken, expiresAt, false]
+  );
 
   await transporter.sendMail({
     from: '"Code Runner" <no-reply@example.com>', // Sender address

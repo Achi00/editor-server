@@ -23,12 +23,13 @@ router.post("/run-node", async (req, res) => {
   const { userId, entryFile } = req.body;
 
   if (!userId || !entryFile) {
+    console.error("userId and entryFile are required");
     return res.status(400).json({ error: "userId and entryFile are required" });
   }
   // get uneque ports to avoid conflict
   const basePort = 3000;
   const containerPort = basePort + parseInt(userId);
-
+  console.log("checking port " + containerPort);
   // check if port is avelable
   const portAvailable = await isPortAvailable(containerPort);
   if (!portAvailable) {
@@ -40,12 +41,13 @@ router.post("/run-node", async (req, res) => {
   try {
     // Path to user's package directory
     const userDir = path.resolve(__dirname, "..", "packages", userId);
-
+    console.log("check if container running");
     // Check if the container for the user is already running
     const containerExists = await isContainerRunning(userId);
-
+    console.log("containerExists: " + containerExists);
     //Start the container if it doesn't already exist
     if (!containerExists) {
+      console.log("starting docker container");
       await startDockerContainer(userId, userDir, containerPort);
     }
 
@@ -55,9 +57,6 @@ router.post("/run-node", async (req, res) => {
     } catch (error) {
       return res.status(404).json({ error: "User directory not found" });
     }
-
-    // Start the container
-    await startDockerContainer(userId, userDir);
 
     // Read the user's JavaScript code (entryFile)
     const entryFilePath = path.join(userDir, entryFile);
@@ -97,7 +96,7 @@ router.post("/run-node", async (req, res) => {
     };
 
     // Execute the user's code in Docker
-    const { stdout, stderr, logs } = await runUserCodeInDockerNode(
+    const { stdout, stderr, logs, time } = await runUserCodeInDockerNode(
       userId,
       codePayload
     );
@@ -107,6 +106,7 @@ router.post("/run-node", async (req, res) => {
       output: stdout,
       logs: logs,
       error: stderr,
+      time: time,
     });
   } catch (error) {
     console.error("Error running code:", error);
@@ -214,7 +214,7 @@ router.post("/jsdom", async (req, res) => {
     };
 
     // Execute the user's code in Docker
-    const { stdout, stderr, consoleLogs, finalHTML } =
+    const { stdout, stderr, consoleLogs, finalHTML, time } =
       await runUserCodeInDocker(userId, codePayload, containerPort);
 
     // Send the result back to the client
@@ -223,6 +223,7 @@ router.post("/jsdom", async (req, res) => {
       error: stderr,
       logs: consoleLogs,
       html: finalHTML,
+      time: time,
     });
   } catch (error) {
     console.error("Error running code:", error);

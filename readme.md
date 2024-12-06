@@ -12,6 +12,20 @@ This API provides functionality for managing Node.js packages and executing code
    - **Email Validation**: User have to validate there email addresses during registration otherwise they can't be authenticated or authorized.
    - **Password Reset/Recovery**: Allow users to reset or recover their passwords via email.
 
+## Mode about authentication
+
+# Email Verification, Password Reset, and Authentication System
+
+- **Email Verification**: Users receive a verification email with a unique link when registering or updating their email. Clicking the link confirms the email, allowing the user to authenticate.
+
+- **Password Reset**: Users can request a password reset by entering their registered email on the reset page. For security:
+
+The email must exist in the database; otherwise, no reset request is sent.
+
+- **Password Reset Rules**:
+  - Users can not re-use their old password during the reset process.
+  - Password reset url can only be used once
+
 2. **Package Management**
 
    - Create and update `package.json` files for users
@@ -42,16 +56,17 @@ The API uses Docker to create a sandboxed environment for package installation a
 
 ### Custom Node.js Server
 
-The API is built on a custom Node.js server using Express.js.
+The API is built on a custom `Node.js` server using `Express.js`.
 
 ### Node.js vs jsdom Execution
 
 The system determines whether to use Node.js runtime or jsdom based on the requirements of the code being executed:
 
-- If the code requires browser-like APIs, jsdom is used to simulate a browser environment.
+- If the code requires browser-like APIs, jsdom is used to simulate a browser environment, for example if in js code user uses any jsdom logic like `document.getElementById("demo").innerText = "Hello"` it will run as a browser environment and user will see html content rendered on right panel.
+
 - For server-side or general JavaScript execution, the Node.js runtime is used.
 
-This decision is typically made based on the presence of browser-specific APIs in the user's code or explicit configuration. one will not work with another endpoint, its same for both cases because when server recives user's code it is wrapper in some additional logic and it is stored in new .js file, for more info about this, can see:
+This decision is typically made based on the presence of browser-specific APIs in the user's code or explicit configuration. one will not work with another endpoint, its same for both cases because when server recives user's code it is wrapper in additional logic and it is stored in new temporary `.js` file, for more info about this, can see:
 `./routes/runCodeRoute.js, From line 66`
 
 ## Tech Stack
@@ -63,39 +78,6 @@ This decision is typically made based on the presence of browser-specific APIs i
 - **HTTP Client**: Axios (for npm registry queries)
 - **Database**: mysql
 - **Authentication**: JWT
-
-## API Endpoints
-
-1. **POST /create-package**
-
-   - Creates or updates a `package.json` file for a user
-   - Adds specified packages to the dependencies
-
-2. **POST /install**
-
-   - Installs packages listed in the user's `package.json`
-   - Executes `npm install` in a Docker container
-
-3. **POST /packagelist**
-
-   - Retrieves the list of installed packages for a user, from user directory in `package.json`
-
-4. **POST /auth/register**
-
-   - Registers a new user with email validation
-
-5. **POST /auth/login**
-
-   - Authenticates a user and returns a JWT token
-
-6. **POST /auth/verify-email**
-
-   - Email verification
-
-7. **POST /auth/token**
-   - Manage auth token
-8. **POST /auth/reset-email-verify**
-   - Reset password by url which is send to user's email
 
 ## Setup and Running
 

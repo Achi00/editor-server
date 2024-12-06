@@ -3,6 +3,7 @@ const router = express.Router();
 const fs = require("fs").promises;
 const path = require("path");
 const pool = require("../db");
+const { createOrUpdatePackageJson } = require("../helpers/createJson");
 
 // Endpoint to create empty new file
 router.post("/", async (req, res) => {
@@ -20,12 +21,7 @@ router.post("/", async (req, res) => {
     const userDir = path.join(__dirname, "..", "packages", Id);
 
     // Create user directory if it doesn't exist
-    try {
-      await fs.access(userDir);
-    } catch (error) {
-      await fs.mkdir(userDir, { recursive: true });
-      console.error(error);
-    }
+    await fs.mkdir(userDir, { recursive: true });
 
     // Create or overwrite the file with the given content
     const filePath = path.join(userDir, fileName);
@@ -53,6 +49,8 @@ router.post("/", async (req, res) => {
     );
     // Return the list of files in the user's directory
     const files = await fs.readdir(userDir);
+
+    await createOrUpdatePackageJson(userDir, userId);
 
     res.status(200).json({
       message: "File created successfully",

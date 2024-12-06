@@ -27,6 +27,7 @@ module.exports = {
     const connection = await pool.getConnection();
     try {
       const [rows] = await connection.execute(query, params);
+
       return rows;
     } finally {
       connection.release();

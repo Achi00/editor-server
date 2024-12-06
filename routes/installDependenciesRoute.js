@@ -5,6 +5,7 @@ const fs = require("fs");
 const path = require("path");
 const { exec } = require("child_process");
 const axios = require("axios");
+const { createOrUpdatePackageJson } = require("../helpers/createJson");
 // The container runs as root by default. For production, consider adding a non-root user in the Dockerfile.
 
 // Helper function to get the project root directory
@@ -44,25 +45,9 @@ const generateTempFolder = () => {
   return Math.random().toString(36).substring(2, 18);
 };
 
-// Helper function to get package info from npm registry
-const getPackageInfo = async (packageName) => {
-  const response = await axios.get(`https://registry.npmjs.org/${packageName}`);
-  return response.data["dist-tags"].latest; // Get the latest version
-};
-
 router.post("/create-package", async (req, res) => {
   const { userId, packages } = req.body;
-
-  // Validate that 'packages' is an array
-  if (!Array.isArray(packages) || packages.length === 0) {
-    return res.status(400).json({
-      status: "error",
-      message: "Packages field must be a non-empty array.",
-    });
-  }
-
-  // Determine the user folder path
-  let userFolder = userId
+  const userFolder = userId
     ? `packages/${userId}`
     : `packages/${generateTempFolder()}`;
 
@@ -71,54 +56,17 @@ router.post("/create-package", async (req, res) => {
     fs.mkdirSync(userFolder, { recursive: true });
   }
 
-  const packageJsonPath = path.join(userFolder, "package.json");
-  let packageJson = {
-    name: `temp-project-${userId || generateTempFolder()}`, // Unique name
-    version: "1.0.0",
-    description: "Temporary project for package management",
-    private: true,
-    dependencies: {
-      jsdom: "^20.0.0",
-    },
-  };
-
-  // Check if package.json already exists
-  if (fs.existsSync(packageJsonPath)) {
-    try {
-      // Read the existing package.json
-      const existingPackageJson = fs.readFileSync(packageJsonPath, "utf8");
-      packageJson = JSON.parse(existingPackageJson);
-    } catch (error) {
-      console.error(error);
-      return res.status(500).json({
-        status: "error",
-        message: "Error reading existing package.json",
-        error: error.message,
-      });
-    }
-  }
-
   try {
-    // Add new packages to the dependencies
-    for (const pkg of packages) {
-      const latestVersion = await getPackageInfo(pkg);
-      packageJson.dependencies[pkg] = `^${latestVersion}`;
-    }
-
-    // Write the updated package.json to the user folder
-    fs.writeFileSync(packageJsonPath, JSON.stringify(packageJson, null, 2));
+    await createOrUpdatePackageJson(userFolder, userId, packages);
+    res.status(200).json({
+      status: "success",
+      message: "package.json updated",
+      userFolder: userFolder,
+    });
   } catch (error) {
     console.error(error);
-    return res.status(500).json({
-      message: error.message,
-    });
+    res.status(500).json({ message: error.message });
   }
-
-  return res.status(200).json({
-    status: "success",
-    message: "package.json updated",
-    userFolder: userFolder,
-  });
 });
 
 router.post("/install", async (req, res) => {

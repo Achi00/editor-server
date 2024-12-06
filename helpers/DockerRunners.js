@@ -86,6 +86,8 @@ const runUserCodeInDocker = async (userId, code, containerPort) => {
     const end = Date.now();
     console.log(`Code execution time: ${(end - start) / 1000} seconds`);
 
+    const time = end - start;
+
     const data = response.data;
 
     return {
@@ -93,6 +95,7 @@ const runUserCodeInDocker = async (userId, code, containerPort) => {
       stderr: "",
       consoleLogs: data.consoleLogs || [],
       finalHTML: data.finalHTML || [],
+      time: time,
     };
   } catch (error) {
     const end = Date.now();
@@ -128,6 +131,7 @@ const runUserCodeInDockerNode = async (userId, code) => {
   const hostPort = 3000 + parseInt(userId); // Unique port per user
 
   try {
+    const start = Date.now();
     // Wait for the server to be ready
     await waitForServer(hostPort);
 
@@ -143,11 +147,16 @@ const runUserCodeInDockerNode = async (userId, code) => {
     );
 
     console.log("Docker response:", response);
+    const end = Date.now();
+    console.log(`Code execution time: ${(end - start) / 1000} seconds`);
+
+    const time = end - start;
 
     return {
       stdout: response.data.output,
       logs: response.data.logs,
       stderr: response.data.error || "",
+      time: time,
     };
   } catch (error) {
     console.error(`Error running code in Docker: ${error.message}`);
