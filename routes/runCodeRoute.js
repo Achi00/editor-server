@@ -31,14 +31,16 @@ router.post("/run-node", async (req, res) => {
   const containerPort = basePort + parseInt(userId);
   console.log("checking port " + containerPort);
   // check if port is avelable
-  const portAvailable = await isPortAvailable(containerPort);
-  if (!portAvailable) {
-    return res
-      .status(500)
-      .json({ error: `Port ${containerPort} is already in use` });
-  }
+  // const portAvailable = await isPortAvailable(containerPort);
+  // if (!portAvailable) {
+  //   return res
+  //     .status(500)
+  //     .json({ error: `Port ${containerPort} is already in use` });
+  // }
 
   try {
+    // check if port is avelable
+    const portAvailable = await isPortAvailable(containerPort);
     // Path to user's package directory
     const userDir = path.resolve(__dirname, "..", "packages", userId);
     console.log("check if container running");
@@ -47,6 +49,14 @@ router.post("/run-node", async (req, res) => {
     console.log("containerExists: " + containerExists);
     //Start the container if it doesn't already exist
     if (!containerExists) {
+      const portAvailable = await isPortAvailable(containerPort);
+      if (!portAvailable) {
+        // If the port isn't available and no container is running,
+        // that's a real problem. Return the error here.
+        return res
+          .status(500)
+          .json({ error: `Port ${containerPort} is already in use` });
+      }
       console.log("starting docker container");
       await startDockerContainer(userId, userDir, containerPort);
     }

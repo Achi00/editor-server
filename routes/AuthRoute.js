@@ -1,3 +1,4 @@
+require("dotenv").config();
 const express = require("express");
 const router = express.Router();
 const jwt = require("jsonwebtoken");
@@ -357,7 +358,7 @@ function verifyToken(req, res, next) {
 async function sendPasswordResetEmail(email) {
   const encryptedEmail = encryptEmail(email);
   const resetToken = generateResetToken();
-  const verificationLink = `http://localhost:8000/auth/reset-password?email=${encryptedEmail}&token=${resetToken}`;
+  const verificationLink = `${process.env.SERVER_URL}auth/reset-password?email=${encryptedEmail}&token=${resetToken}`;
 
   // save token in database to watch its expiration time
   const expiresAt = new Date(Date.now() + 3600000); // Token valid for 1 hour
@@ -410,7 +411,7 @@ async function sendPasswordResetEmail(email) {
   });
 }
 async function sendVerificationEmail(email, token) {
-  const verificationLink = `http://localhost:8000/auth/verify-email?token=${token}`;
+  const verificationLink = `${process.env.SERVER_URL}/auth/verify-email?token=${token}`;
 
   await transporter.sendMail({
     from: '"Code Runner" <no-reply@example.com>', // Sender address

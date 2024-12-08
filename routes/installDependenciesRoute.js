@@ -15,7 +15,7 @@ const getProjectRoot = () => {
 
 const runInDocker = (command, workDir) => {
   return new Promise((resolve, reject) => {
-    const dockerCommand = `docker run --rm -v "${workDir}:/app" nodejs-sandbox ${command}`;
+    const dockerCommand = `docker run --rm -v "${workDir}:/app" --user root nodejs-sandbox ${command}`;
     const childProcess = exec(
       dockerCommand,
       { timeout: 120000 },
