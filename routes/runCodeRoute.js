@@ -144,14 +144,15 @@ router.post("/jsdom", async (req, res) => {
   const containerPort = basePort + parseInt(userId);
 
   // check if port is available
-  const portAvailable = await isPortAvailable(containerPort);
-  if (!portAvailable) {
-    return res
-      .status(500)
-      .json({ error: `Port ${containerPort} is already in use` });
-  }
+  // const portAvailable = await isPortAvailable(containerPort);
+  // if (!portAvailable) {
+  //   return res
+  //     .status(500)
+  //     .json({ error: `Port ${containerPort} is already in use` });
+  // }
 
   try {
+    const portAvailable = await isPortAvailable(containerPort);
     // Path to user's package directory
     const userDir = path.resolve(__dirname, "..", "packages", userId);
 
@@ -164,9 +165,19 @@ router.post("/jsdom", async (req, res) => {
 
     // Check if the container for the user is already running
     const containerExists = await isContainerRunning(userId);
+    console.log("containerExists: " + containerExists);
 
     //Start the container if it doesn't already exist
     if (!containerExists) {
+      const portAvailable = await isPortAvailable(containerPort);
+      if (!portAvailable) {
+        // If the port isn't available and no container is running,
+        // that's a real problem. Return the error here.
+        return res
+          .status(500)
+          .json({ error: `Port ${containerPort} is already in use` });
+      }
+      console.log("starting docker container");
       await startDockerContainer(userId, userDir, containerPort);
     }
 

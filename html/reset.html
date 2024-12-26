@@ -186,7 +186,7 @@ l267 -268 -1329 0 c-1014 0 -1338 -3 -1370 -12 -86 -26 -166 -136 -166 -228 0
       async function chackValidation() {
         try {
           const response = await fetch(
-            "http://localhost:8000/auth/validate-reset",
+            "https://codeapi.wordcrafter.io//auth/validate-reset",
             {
               method: "POST",
               headers: {
@@ -248,7 +248,7 @@ l267 -268 -1329 0 c-1014 0 -1338 -3 -1370 -12 -86 -26 -166 -136 -166 -228 0
             submitButton.textContent = "Loading...";
             // Send the new password to the server
             const response = await fetch(
-              "http://localhost:8000/auth/reset-password",
+              "https://codeapi.wordcrafter.io/auth/reset-password",
               {
                 method: "POST",
                 headers: {
